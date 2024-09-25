@@ -1,0 +1,28 @@
+﻿@{
+    Layout = "_LayoutEmployee";
+}
+@model IEnumerable<EmployeeManagementApp.Application.DTOs.EmployeeDto>
+
+<h2>Employee List</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Surname</th>
+            <th>Date of Birth</th>
+            <th>Job Title</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var employee in Model)
+        {
+            <tr>
+                <td>@employee.Name</td>
+                <td>@employee.Surname</td>
+                <td>@(employee.DateOfBirth.ToString("yyyy-MM-dd") ?? "N/A")</td> 
+                <td>@employee.JobTitleName</td>
+            </tr>
+        }
+    </tbody>
+</table>

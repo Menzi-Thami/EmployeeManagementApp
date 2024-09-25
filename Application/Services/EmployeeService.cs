@@ -49,8 +49,8 @@ namespace EmployeeManagementApp.Application.Services
             try
             {
                 var employee = _mapper.Map<Employee>(employeeDto);
+                await _employeeRepository.AddEmployeeAsync(employee);  // Await the repository method
 
-                await _employeeRepository.AddEmployeeAsync(employee);
                 _logger.LogInformation($"Employee {employee.Name} {employee.Surname} added successfully.");
             }
             catch (Exception ex)
@@ -59,6 +59,7 @@ namespace EmployeeManagementApp.Application.Services
                 throw;
             }
         }
+
 
         // Update an existing employee
         public async Task UpdateEmployeeAsync(EmployeeDto employeeDto)

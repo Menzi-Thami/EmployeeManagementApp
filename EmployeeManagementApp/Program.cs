@@ -17,8 +17,6 @@ builder.Host.UseSerilog((context, config) =>
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
-
-// Register Razor Pages
 builder.Services.AddRazorPages();
 
 // Register AutoMapper with the MappingProfile
@@ -40,18 +38,16 @@ builder.Services.AddScoped<IJobTitleRepository>(provider =>
 // Register services
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
-
-// Register the BulkInsertService with DI
 builder.Services.AddScoped<IBulkInsertService, BulkInsertService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Home/Error");
-    app.UseHsts();
-}
+//// Configure the HTTP request pipeline.
+//if (!app.Environment.IsDevelopment())
+//{
+//    app.UseExceptionHandler("/Home/Error");
+//    app.UseHsts();
+//}
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
@@ -59,9 +55,22 @@ app.UseRouting();
 app.UseAuthorization();
 
 // Map Razor Pages
-app.MapRazorPages(); // Ensure Razor Pages are mapped
+app.MapRazorPages();
 
-// Map default controller route
+// Set up custom routing for Add Employee and View Projects.
+//app.MapControllerRoute(
+//    name: "AddEmployee",
+//    pattern: "addemploy",
+//    defaults: new { controller = "EmployeeController", action = "AddEmployee" }
+//);
+
+//app.MapControllerRoute(
+//    name: "ViewProjects",
+//    pattern: "viewprojects",
+//    defaults: new { controller = "ProjectController", action = "ViewProjects" }
+//);
+
+//// Map default controller route
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");

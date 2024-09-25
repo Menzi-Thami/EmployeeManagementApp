@@ -1,10 +1,11 @@
-﻿using EmployeeManagementApp.Application.DTOs;
+﻿using Microsoft.AspNetCore.Mvc;
+using EmployeeManagementApp.Domain.Models; 
+using System.Linq;
 using EmployeeManagementApp.Application.Services;
-using Microsoft.AspNetCore.Mvc;
+using EmployeeManagementApp.Application.DTOs;
 
-namespace EmployeeManagementApp.Controllers
+namespace EmployeeManagementApp.API.Controllers
 {
-    [Route("[controller]")]
     public class ProjectController : Controller
     {
         private readonly IProjectService _projectService;
@@ -14,31 +15,22 @@ namespace EmployeeManagementApp.Controllers
             _projectService = projectService;
         }
 
-        [HttpGet]
-        public IActionResult Index()
+        // GET: /viewprojects
+        public IActionResult ViewProjects()
         {
             var projects = _projectService.GetAllProjects(); 
-            return View(projects);
-        }
-        [HttpGet("{id}")]
-        public IActionResult Details(int id)
-        {
-            var project = _projectService.GetProjectById(id);
-            if (project == null) return NotFound();
-            return View(project); 
-        }
 
-        [HttpGet("{id}/UpdateCost")]
-        public IActionResult UpdateCost(int id)
-        {
-            return View(id); 
-        }
+            var viewModel = projects.Select(p => new ProjectDto
+            {
+                Id = p.Id,
+                Name = p.Name,
+                StartDate = p.StartDate,
+                EndDate = p.EndDate,
+                Cost = p.Cost,
+                EmployeeNames = p.Employees.Select(e => $"{e.Name} {e.Surname}").ToList()
+            }).ToList();
 
-        [HttpPost("{id}/UpdateCost")]
-        public IActionResult UpdateCost(int id, decimal newCost)
-        {
-            _projectService.UpdateProjectCost(id);
-            return RedirectToAction("Index"); 
+            return View(viewModel); 
         }
     }
 }

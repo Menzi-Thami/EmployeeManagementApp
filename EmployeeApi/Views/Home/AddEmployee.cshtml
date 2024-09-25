@@ -1,0 +1,28 @@
+﻿@model EmployeeManagementApp.Application.DTOs.EmployeeDto
+
+<form asp-action="AddEmployee" method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div>
+        <label asp-for="Name"></label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+    <div>
+        <label asp-for="Surname"></label>
+        <input asp-for="Surname" class="form-control" />
+        <span asp-validation-for="Surname" class="text-danger"></span>
+    </div>
+    <div>
+        <label asp-for="JobTitleId"></label>
+        <input asp-for="JobTitleId" class="form-control" />
+        <span asp-validation-for="JobTitleId" class="text-danger"></span>
+    </div>
+    <div>
+        <label asp-for="DateOfBirth"></label>
+        <input asp-for="DateOfBirth" class="form-control" />
+        <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+    </div>
+
+    <button type="submit">Add Employee</button>
+</form>

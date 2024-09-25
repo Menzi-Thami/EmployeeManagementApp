@@ -21,6 +21,14 @@ namespace EmployeeManagementApp.Application.Services
         public IEnumerable<ProjectDto> GetAllProjects()
         {
             var projects = _projectRepository.GetAllProjects();
+
+            // Return an empty collection if projects is null
+            if (projects == null)
+            {
+                return Enumerable.Empty<ProjectDto>();
+            }
+
+            // Use AutoMapper to map the list of Project to ProjectDto
             return _mapper.Map<IEnumerable<ProjectDto>>(projects);
         }
 
@@ -39,7 +47,7 @@ namespace EmployeeManagementApp.Application.Services
 
         public decimal CalculateProjectCost(ProjectDto project)
         {
-            decimal totalCost = project.Cost; // Start with the base cost of the project
+            decimal totalCost = project.Cost; 
 
             foreach (var employee in project.Employees)
             {
@@ -51,7 +59,7 @@ namespace EmployeeManagementApp.Application.Services
                     case 2: // DBA
                         totalCost += 3000;
                         break;
-                    case 3: // Tester
+                    case 3: // QA
                         totalCost += 1000;
                         break;
                     case 4: // Business Analyst
