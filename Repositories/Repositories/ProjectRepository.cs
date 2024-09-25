@@ -15,7 +15,7 @@ namespace EmployeeManagementApp.Infrastructure.Repositories
 
         public ProjectRepository(string connectionString, ILogger<ProjectRepository> logger)
         {
-            connectionString = connectionString;
+            _connectionString = connectionString;
             _logger = logger;
         }
 

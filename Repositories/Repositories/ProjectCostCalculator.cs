@@ -14,7 +14,7 @@ namespace EmployeeManagementApp.Infrastructure.Calculators
 
         public ProjectCostCalculator(string connectionString, ILogger<ProjectCostCalculator> logger)
         {
-            connectionString = connectionString;
+            _connectionString = connectionString;
             _logger = logger;
         }
 
