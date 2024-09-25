@@ -36,6 +36,7 @@ builder.Services.AddScoped<IProjectCostCalculator>(provider =>
 builder.Services.AddScoped<IJobTitleRepository>(provider =>
     new JobTitleRepository(connectionString, provider.GetRequiredService<ILogger<JobTitleRepository>>()));
 
+
 // Register services
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();

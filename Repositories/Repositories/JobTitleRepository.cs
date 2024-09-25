@@ -1,39 +1,42 @@
-﻿using Dapper;
-using EmployeeManagementApp.Domain.Models; 
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Configuration;
-using System.Data;
-using System.Data.SqlClient;
+﻿using EmployeeManagementApp.Domain.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Dapper;
+using System.Data;
+using Microsoft.Extensions.Logging;
+using System.Data.SqlClient;
 
 namespace EmployeeManagementApp.Infrastructure.Repositories
 {
-    public class JobTitleRepository : IJobTitleRepository 
+    public class JobTitleRepository : IJobTitleRepository
     {
         private readonly string _connectionString;
         private readonly ILogger<JobTitleRepository> _logger;
 
+       
         public JobTitleRepository(string connectionString, ILogger<JobTitleRepository> logger)
         {
             _connectionString = connectionString;
-
             _logger = logger;
         }
 
         public async Task<IEnumerable<JobTitle>> GetAllJobTitlesAsync()
         {
-            try
+            using (var connection = new SqlConnection(_connectionString))
             {
-                using (IDbConnection db = new SqlConnection(_connectionString))
-                {
-                    return await db.QueryAsync<JobTitle>("SELECT * FROM JobTitle");
-                }
+                var sql = "SELECT * FROM JobTitle"; 
+                var jobTitles = await connection.QueryAsync<JobTitle>(sql);
+                return jobTitles;
             }
-            catch (Exception ex)
+        }
+
+        public async Task<JobTitle> GetJobTitleByIdAsync(int jobTitleId)
+        {
+            using (var connection = new SqlConnection(_connectionString))
             {
-                _logger.LogError(ex, "Error occurred while fetching job titles");
-                throw;
+                var sql = "SELECT * FROM JobTitle WHERE Id = @Id"; 
+                var jobTitle = await connection.QueryFirstOrDefaultAsync<JobTitle>(sql, new { Id = jobTitleId });
+                return jobTitle;
             }
         }
     }

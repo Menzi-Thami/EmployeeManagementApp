@@ -13,5 +13,6 @@ namespace EmployeeManagementApp.Domain.Models
         public string Surname { get; set; }
         public int JobTitleId { get; set; }
         public DateTime? DateOfBirth { get; set; }
+        public string JobTitleName { get; set; }
     }
 }

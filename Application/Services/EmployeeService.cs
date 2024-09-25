@@ -6,27 +6,58 @@ using EmployeeManagementApp.Infrastructure.Repositories;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System;
 
 namespace EmployeeManagementApp.Application.Services
 {
     public class EmployeeService : IEmployeeService
     {
         private readonly IEmployeeRepository _employeeRepository;
-        private readonly ILogger<EmployeeService> _logger;
         private readonly IJobTitleRepository _jobTitleRepository;
-        private readonly IMapper _mapper; 
+        private readonly ILogger<EmployeeService> _logger;
+        private readonly IMapper _mapper;
 
         public EmployeeService(IEmployeeRepository employeeRepository,
                                IJobTitleRepository jobTitleRepository,
                                ILogger<EmployeeService> logger,
-                               IMapper mapper) 
+                               IMapper mapper)
         {
             _employeeRepository = employeeRepository;
-            _jobTitleRepository = jobTitleRepository; 
+            _jobTitleRepository = jobTitleRepository;
             _logger = logger;
-            _mapper = mapper; 
+            _mapper = mapper;
         }
 
+        // Add a new employee with job title
+        public async Task AddEmployeeAsync(EmployeeDto employeeDto)
+        {
+            try
+            {
+                // Fetch the job title name based on the JobTitleId
+                var jobTitle = await _jobTitleRepository.GetJobTitleByIdAsync(employeeDto.JobTitleId);
+                if (jobTitle != null)
+                {
+                    employeeDto.JobTitleName = jobTitle.JobTitleName;  // Assign the job title name to the DTO
+                }
+                else
+                {
+                    _logger.LogWarning($"Job title with ID {employeeDto.JobTitleId} not found.");
+                }
+
+                var employee = _mapper.Map<Employee>(employeeDto);
+
+                // Add the employee to the repository
+                await _employeeRepository.AddEmployeeAsync(employee);
+                _logger.LogInformation($"Employee {employee.Name} {employee.Surname} with job title {employeeDto.JobTitleName} added successfully.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while adding employee.");
+                throw;
+            }
+        }
+
+        // Get all job titles
         public async Task<IEnumerable<JobTitleDto>> GetAllJobTitlesAsync()
         {
             try
@@ -43,31 +74,12 @@ namespace EmployeeManagementApp.Application.Services
             }
         }
 
-        // Add a new employee
-        public async Task AddEmployeeAsync(EmployeeDto employeeDto)
-        {
-            try
-            {
-                var employee = _mapper.Map<Employee>(employeeDto);
-                await _employeeRepository.AddEmployeeAsync(employee);  // Await the repository method
-
-                _logger.LogInformation($"Employee {employee.Name} {employee.Surname} added successfully.");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while adding employee.");
-                throw;
-            }
-        }
-
-
         // Update an existing employee
         public async Task UpdateEmployeeAsync(EmployeeDto employeeDto)
         {
             try
             {
                 var employee = _mapper.Map<Employee>(employeeDto);
-
                 await _employeeRepository.UpdateEmployeeAsync(employee);
                 _logger.LogInformation($"Employee {employee.Name} {employee.Surname} updated successfully.");
             }
@@ -99,9 +111,7 @@ namespace EmployeeManagementApp.Application.Services
             try
             {
                 var employees = await _employeeRepository.GetAllEmployeesAsync();
-
                 var employeeDtos = _mapper.Map<IEnumerable<EmployeeDto>>(employees);
-
                 _logger.LogInformation("Fetched all employees successfully.");
                 return employeeDtos;
             }
@@ -125,7 +135,6 @@ namespace EmployeeManagementApp.Application.Services
                 }
 
                 var employeeDto = _mapper.Map<EmployeeDto>(employee);
-
                 _logger.LogInformation($"Fetched employee with ID {employeeId} successfully.");
                 return employeeDto;
             }
