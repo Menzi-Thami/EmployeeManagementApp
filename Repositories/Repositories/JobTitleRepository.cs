@@ -16,7 +16,8 @@ namespace EmployeeManagementApp.Infrastructure.Repositories
 
         public JobTitleRepository(string connectionString, ILogger<JobTitleRepository> logger)
         {
-            connectionString = connectionString;
+            _connectionString = connectionString;
+
             _logger = logger;
         }
 

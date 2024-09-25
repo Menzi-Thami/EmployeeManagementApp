@@ -4,8 +4,8 @@ using EmployeeManagementApp.Infrastructure.Repositories;
 using EmployeeManagementApp.Infrastructure.Calculators;
 using EmployeeManagementApp.Application.Services;
 using EmployeeManagementApp.Infrastructure.Interfaces;
-using EmployeeManagementApp.Application.Mapping; 
-using EmployeeManagementConsoleApp.Services; 
+using EmployeeManagementApp.Application.Mapping;
+using EmployeeManagementConsoleApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,21 +16,30 @@ builder.Host.UseSerilog((context, config) =>
 });
 
 // Add services to the container.
-builder.Services.AddControllersWithViews(); 
+builder.Services.AddControllersWithViews();
 
 // Register Razor Pages
-builder.Services.AddRazorPages(); 
+builder.Services.AddRazorPages();
 
 // Register AutoMapper with the MappingProfile
-builder.Services.AddAutoMapper(typeof(MappingProfile)); 
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 
-// Register the repositories and services
-builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
-builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
-builder.Services.AddScoped<IProjectCostCalculator, ProjectCostCalculator>();
+// Retrieve the connection string from configuration
+string connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+// Register the repositories and services with the connection string
+builder.Services.AddScoped<IEmployeeRepository>(provider =>
+    new EmployeeRepository(connectionString, provider.GetRequiredService<ILogger<EmployeeRepository>>()));
+builder.Services.AddScoped<IProjectRepository>(provider =>
+    new ProjectRepository(connectionString, provider.GetRequiredService<ILogger<ProjectRepository>>()));
+builder.Services.AddScoped<IProjectCostCalculator>(provider =>
+    new ProjectCostCalculator(connectionString, provider.GetRequiredService<ILogger<ProjectCostCalculator>>()));
+builder.Services.AddScoped<IJobTitleRepository>(provider =>
+    new JobTitleRepository(connectionString, provider.GetRequiredService<ILogger<JobTitleRepository>>()));
+
+// Register services
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
-builder.Services.AddScoped<IJobTitleRepository, JobTitleRepository>();
 
 // Register the BulkInsertService with DI
 builder.Services.AddScoped<IBulkInsertService, BulkInsertService>();
