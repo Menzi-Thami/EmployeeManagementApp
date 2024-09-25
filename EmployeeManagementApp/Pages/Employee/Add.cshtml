@@ -1,0 +1,102 @@
+﻿@page
+@model EmployeeManagementApp.Pages.Employee.AddModel
+@{
+    ViewData["Title"] = "Add Employee";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        select {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        input[type="submit"] {
+            background-color: #5cb85c;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+            input[type="submit"]:hover {
+                background-color: #4cae4c;
+            }
+
+        .error-message {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Add Employee</h2>
+        <form method="post">
+            <label asp-for="EmployeeDto.Name">Name:</label>
+            <input asp-for="EmployeeDto.Name" />
+            <span asp-validation-for="EmployeeDto.Name" class="text-danger"></span>
+
+            <label asp-for="EmployeeDto.Surname">Surname:</label>
+            <input asp-for="EmployeeDto.Surname" />
+            <span asp-validation-for="EmployeeDto.Surname" class="text-danger"></span>
+
+            <label asp-for="EmployeeDto.JobTitleId">Job Title:</label>
+            <select asp-for="EmployeeDto.JobTitleId" asp-items="@(new SelectList(ViewBag.JobTitles, "Id", "JobTitleName"))">
+                <option value="">Select Job Title</option>
+            </select>
+            <span asp-validation-for="EmployeeDto.JobTitleId" class="text-danger"></span>
+
+            <label asp-for="EmployeeDto.DateOfBirth">Date of Birth:</label>
+            <input asp-for="EmployeeDto.DateOfBirth" type="date" />
+            <span asp-validation-for="EmployeeDto.DateOfBirth" class="text-danger"></span>
+
+            <input type="submit" value="Add Employee" />
+            <div class="error-message">
+                @Html.ValidationSummary()
+            </div>
+        </form>
+    </div>
+</body>
+</html>
