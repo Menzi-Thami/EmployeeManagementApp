@@ -11,6 +11,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmployeeManagementApp.Domai
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmployeeManagementApp.Infrastructure", "..\Repositories\EmployeeManagementApp.Infrastructure.csproj", "{5A2AA6E1-2BBC-459D-B72C-D9168F690B4D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BulkInsert", "..\BulkInsert\BulkInsert.csproj", "{07E9B30D-7569-4381-8495-5793AC2AEDDD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmployeeManagementConsoleApp.cs", "..\EmployeeManagementConsoleApp.cs\EmployeeManagementConsoleApp.cs.csproj", "{EB2E4F5B-36E8-4B89-A3E1-C6B3EACB7889}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +37,14 @@ Global
 		{5A2AA6E1-2BBC-459D-B72C-D9168F690B4D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5A2AA6E1-2BBC-459D-B72C-D9168F690B4D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5A2AA6E1-2BBC-459D-B72C-D9168F690B4D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{07E9B30D-7569-4381-8495-5793AC2AEDDD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{07E9B30D-7569-4381-8495-5793AC2AEDDD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{07E9B30D-7569-4381-8495-5793AC2AEDDD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{07E9B30D-7569-4381-8495-5793AC2AEDDD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EB2E4F5B-36E8-4B89-A3E1-C6B3EACB7889}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EB2E4F5B-36E8-4B89-A3E1-C6B3EACB7889}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EB2E4F5B-36E8-4B89-A3E1-C6B3EACB7889}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EB2E4F5B-36E8-4B89-A3E1-C6B3EACB7889}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Application\EmployeeManagementApp.Application.csproj" />
+    <ProjectReference Include="..\BulkInsert\BulkInsert.csproj" />
     <ProjectReference Include="..\Domain\EmployeeManagementApp.Domain.csproj" />
   </ItemGroup>
 

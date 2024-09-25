@@ -12,9 +12,9 @@ namespace EmployeeManagementApp.Infrastructure.Calculators
         private readonly string _connectionString;
         private readonly ILogger<ProjectCostCalculator> _logger;
 
-        public ProjectCostCalculator(IConfiguration configuration, ILogger<ProjectCostCalculator> logger)
+        public ProjectCostCalculator(string connectionString, ILogger<ProjectCostCalculator> logger)
         {
-            _connectionString = configuration.GetConnectionString("DefaultConnection");
+            connectionString = connectionString;
             _logger = logger;
         }
 

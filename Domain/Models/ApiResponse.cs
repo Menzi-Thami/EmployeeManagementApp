@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace EmployeeManagementApp.Domain.Models
 {
-    public class ProjectLocations
+    public class ApiResponse
     {
-        public string Id { get; set; }
-        public string Name { get; set; }
-        public string Location { get; set; }
+        public string Result { get; set; }
+        public string Message { get; set; }
+        public List<ProjectLocations> Data { get; set; }
     }
 }

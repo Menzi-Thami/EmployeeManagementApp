@@ -14,9 +14,9 @@ namespace EmployeeManagementApp.Infrastructure.Repositories
         private readonly string _connectionString;
         private readonly ILogger<JobTitleRepository> _logger;
 
-        public JobTitleRepository(IConfiguration configuration, ILogger<JobTitleRepository> logger)
+        public JobTitleRepository(string connectionString, ILogger<JobTitleRepository> logger)
         {
-            _connectionString = configuration.GetConnectionString("DefaultConnection");
+            connectionString = connectionString;
             _logger = logger;
         }
 

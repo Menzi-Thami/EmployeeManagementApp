@@ -14,9 +14,9 @@ namespace EmployeeManagementApp.Infrastructure.Repositories
         private readonly string _connectionString;
         private readonly ILogger<EmployeeRepository> _logger;
 
-        public EmployeeRepository(IConfiguration configuration, ILogger<EmployeeRepository> logger) 
+        public EmployeeRepository(string connectionString, ILogger<EmployeeRepository> logger)
         {
-            _connectionString = configuration.GetConnectionString("DefaultConnection"); 
+            _connectionString = connectionString;
             _logger = logger;
         }
 

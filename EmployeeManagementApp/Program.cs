@@ -4,7 +4,8 @@ using EmployeeManagementApp.Infrastructure.Repositories;
 using EmployeeManagementApp.Infrastructure.Calculators;
 using EmployeeManagementApp.Application.Services;
 using EmployeeManagementApp.Infrastructure.Interfaces;
-using EmployeeManagementApp.Application.Mapping; // Include the Mapping namespace
+using EmployeeManagementApp.Application.Mapping; 
+using EmployeeManagementConsoleApp.Services; 
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,13 +16,13 @@ builder.Host.UseSerilog((context, config) =>
 });
 
 // Add services to the container.
-builder.Services.AddControllersWithViews(); // For MVC Controllers
+builder.Services.AddControllersWithViews(); 
 
 // Register Razor Pages
-builder.Services.AddRazorPages(); // This line registers Razor Pages
+builder.Services.AddRazorPages(); 
 
 // Register AutoMapper with the MappingProfile
-builder.Services.AddAutoMapper(typeof(MappingProfile)); // Specify the MappingProfile type
+builder.Services.AddAutoMapper(typeof(MappingProfile)); 
 
 // Register the repositories and services
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
@@ -30,6 +31,9 @@ builder.Services.AddScoped<IProjectCostCalculator, ProjectCostCalculator>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<IJobTitleRepository, JobTitleRepository>();
+
+// Register the BulkInsertService with DI
+builder.Services.AddScoped<IBulkInsertService, BulkInsertService>();
 
 var app = builder.Build();
 
