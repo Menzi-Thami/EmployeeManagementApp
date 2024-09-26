@@ -6,7 +6,7 @@ namespace EmployeeManagementApp.Infrastructure.Repositories
 {
     public interface IJobTitleRepository
     {
-        Task<IEnumerable<JobTitle>> GetAllJobTitlesAsync();
-        Task<JobTitle> GetJobTitleByIdAsync(int jobTitleId);
+        Task<IEnumerable<JobTitles>> GetAllJobTitlesAsync();
+        Task<JobTitles> GetJobTitleByIdAsync(int jobTitleId);
     }
 }

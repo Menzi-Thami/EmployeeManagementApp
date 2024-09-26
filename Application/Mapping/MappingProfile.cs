@@ -10,11 +10,11 @@ namespace EmployeeManagementApp.Application.Mapping
         public MappingProfile()
         {
             // Job Title Mappings
-            CreateMap<JobTitle, JobTitleDto>().ReverseMap();
+            CreateMap<JobTitles, JobTitleDto>().ReverseMap();
 
             // Employee Mappings
             CreateMap<Employee, EmployeeDto>()
-                .ForMember(dest => dest.JobTitleName, opt => opt.MapFrom(src => src.JobTitle.JobTitleName)); // Ensure this maps correctly
+    .ForMember(dest => dest.JobTitleName, opt => opt.MapFrom(src => src.JobTitle.JobTitle)); 
             CreateMap<EmployeeDto, Employee>();
 
             // Project Employee Mappings
@@ -28,7 +28,7 @@ namespace EmployeeManagementApp.Application.Mapping
                     src.ProjectEmployees.Select(pe => new JobTitleDto
                     {
                         Id = pe.Employee.JobTitleId,
-                        JobTitleName = pe.Employee.JobTitle.JobTitleName // Ensure this is correct
+                        JobTitleName = pe.Employee.JobTitle.JobTitle 
                     }).ToList()))
                 .ReverseMap();
         }

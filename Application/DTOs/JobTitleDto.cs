@@ -12,7 +12,7 @@ namespace EmployeeManagementApp.Application.DTOs
         public int Id { get; set; }
 
         [Required]
-        [StringLength(50, ErrorMessage = "Job title cannot exceed 50 characters.")]
+        [StringLength(100, ErrorMessage = "Job title cannot exceed 50 characters.")]
         public string JobTitleName { get; set; }
     }
 }

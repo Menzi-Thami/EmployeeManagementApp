@@ -22,7 +22,7 @@ namespace EmployeeApi.Controllers
             var jobTitle = await _jobTitleRepository.GetJobTitleByIdAsync(jobTitleId); 
             if (jobTitle != null)
             {
-                return Ok(new { jobTitleName = jobTitle.JobTitleName }); 
+                return Ok(new { jobTitleName = jobTitle.JobTitle }); 
             }
             return NotFound(); 
         }

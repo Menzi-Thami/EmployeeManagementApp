@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace EmployeeManagementApp.Domain.Models
 {
-    public class JobTitle
+    public class JobTitles
     {
         public int Id { get; set; }
-        public string JobTitleName { get; set; }
+        public string JobTitle { get; set; }
     }
 }

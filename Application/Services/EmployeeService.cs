@@ -36,7 +36,7 @@ namespace EmployeeManagementApp.Application.Services
                 var jobTitle = await _jobTitleRepository.GetJobTitleByIdAsync(employeeDto.JobTitleId);
                 if (jobTitle != null)
                 {
-                    employeeDto.JobTitleName = jobTitle.JobTitleName;
+                    employeeDto.JobTitleName = jobTitle.JobTitle;
                 }
                 else
                 {
@@ -114,7 +114,7 @@ namespace EmployeeManagementApp.Application.Services
                 Surname = e.Surname,
                 DateOfBirth = e.DateOfBirth,
                 JobTitleId = e.JobTitleId,
-                JobTitleName = jobTitles.FirstOrDefault(j => j.Id == e.JobTitleId)?.JobTitleName // Get the Job Title Name
+                JobTitleName = jobTitles.FirstOrDefault(j => j.Id == e.JobTitleId)?.JobTitle 
             });
 
             return employeeDtos;

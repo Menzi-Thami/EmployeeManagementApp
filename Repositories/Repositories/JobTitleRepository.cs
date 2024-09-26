@@ -20,22 +20,22 @@ namespace EmployeeManagementApp.Infrastructure.Repositories
             _logger = logger;
         }
 
-        public async Task<IEnumerable<JobTitle>> GetAllJobTitlesAsync()
+        public async Task<IEnumerable<JobTitles>> GetAllJobTitlesAsync()
         {
             using (var connection = new SqlConnection(_connectionString))
             {
                 var sql = "SELECT * FROM JobTitle"; 
-                var jobTitles = await connection.QueryAsync<JobTitle>(sql);
+                var jobTitles = await connection.QueryAsync<JobTitles>(sql);
                 return jobTitles;
             }
         }
 
-        public async Task<JobTitle> GetJobTitleByIdAsync(int jobTitleId)
+        public async Task<JobTitles> GetJobTitleByIdAsync(int jobTitleId)
         {
             using (var connection = new SqlConnection(_connectionString))
             {
                 var sql = "SELECT * FROM JobTitle WHERE Id = @Id"; 
-                var jobTitle = await connection.QueryFirstOrDefaultAsync<JobTitle>(sql, new { Id = jobTitleId });
+                var jobTitle = await connection.QueryFirstOrDefaultAsync<JobTitles>(sql, new { Id = jobTitleId });
                 return jobTitle;
             }
         }
