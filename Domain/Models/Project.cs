@@ -13,5 +13,6 @@ namespace EmployeeManagementApp.Domain.Models
         public DateTime StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public decimal Cost { get; set; }
+        public ICollection<ProjectEmployee> ProjectEmployees { get; set; } 
     }
 }

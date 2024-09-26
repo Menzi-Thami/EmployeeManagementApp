@@ -21,7 +21,6 @@
         <span asp-validation-for="JobTitleId" class="text-danger"></span>
     </div>
 
-    <!-- Show Job Title Name based on JobTitleId -->
     <div class="mb-3">
         <label asp-for="JobTitleName">Job Title</label>
         <input asp-for="JobTitleName" class="form-control" readonly />
@@ -34,7 +33,9 @@
     </div>
 
     <button type="submit" class="btn btn-primary">Add Employee</button>
+</form>
 
+@section Scripts {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function () {
@@ -57,4 +58,4 @@
             });
         });
     </script>
-</form>
+}

@@ -11,6 +11,7 @@
             <th>Name</th>
             <th>Surname</th>
             <th>Date of Birth</th>
+            <th>Job Title ID</th>
             <th>Job Title</th>
         </tr>
     </thead>
@@ -21,6 +22,7 @@
                 <td>@employee.Name</td>
                 <td>@employee.Surname</td>
                 <td>@(employee.DateOfBirth.ToString("yyyy-MM-dd") ?? "N/A")</td>
+                <td>@employee.JobTitleId</td>
                 <td>@employee.JobTitleName</td>
             </tr>
         }

@@ -25,7 +25,17 @@ namespace EmployeeManagementApp.Infrastructure.Repositories
             {
                 using (IDbConnection db = new SqlConnection(_connectionString))
                 {
-                    return db.Query<Project>("SELECT * FROM Project");
+                    const string sql = @"
+                SELECT p.*, 
+                       STRING_AGG(CONCAT(e.Name, ' ', e.Surname), ', ') AS EmployeeNames,
+                       STRING_AGG(jt.JobTitle, ', ') AS JobTitles
+                FROM Project p
+                LEFT JOIN ProjectEmployee pe ON p.Id = pe.ProjectID
+                LEFT JOIN Employee e ON pe.EmployeeID = e.Id
+                LEFT JOIN JobTitle jt ON e.JobTitleId = jt.Id
+                GROUP BY p.Id, p.Name, p.Startdate, p.Enddate, p.Cost";
+
+                    return db.Query<Project>(sql).ToList();
                 }
             }
             catch (Exception ex)
@@ -34,6 +44,8 @@ namespace EmployeeManagementApp.Infrastructure.Repositories
                 throw;
             }
         }
+
+
 
         public Project GetProjectById(int id)
         {

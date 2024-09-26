@@ -2,11 +2,11 @@
 using EmployeeManagementApp.Application.DTOs;
 using EmployeeManagementApp.Domain.Models;
 using EmployeeManagementApp.Infrastructure.Interfaces;
-using EmployeeManagementApp.Infrastructure.Repositories;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System;
+using EmployeeManagementApp.Infrastructure.Repositories;
 
 namespace EmployeeManagementApp.Application.Services
 {
@@ -33,11 +33,10 @@ namespace EmployeeManagementApp.Application.Services
         {
             try
             {
-                // Fetch the job title name based on the JobTitleId
                 var jobTitle = await _jobTitleRepository.GetJobTitleByIdAsync(employeeDto.JobTitleId);
                 if (jobTitle != null)
                 {
-                    employeeDto.JobTitleName = jobTitle.JobTitleName;  // Assign the job title name to the DTO
+                    employeeDto.JobTitleName = jobTitle.JobTitleName;
                 }
                 else
                 {
@@ -45,8 +44,6 @@ namespace EmployeeManagementApp.Application.Services
                 }
 
                 var employee = _mapper.Map<Employee>(employeeDto);
-
-                // Add the employee to the repository
                 await _employeeRepository.AddEmployeeAsync(employee);
                 _logger.LogInformation($"Employee {employee.Name} {employee.Surname} with job title {employeeDto.JobTitleName} added successfully.");
             }
@@ -64,8 +61,7 @@ namespace EmployeeManagementApp.Application.Services
             {
                 var jobTitles = await _jobTitleRepository.GetAllJobTitlesAsync();
                 _logger.LogInformation("Fetched all job titles successfully.");
-                var jobTitleDtos = _mapper.Map<IEnumerable<JobTitleDto>>(jobTitles);
-                return jobTitleDtos;
+                return _mapper.Map<IEnumerable<JobTitleDto>>(jobTitles);
             }
             catch (Exception ex)
             {
@@ -108,19 +104,22 @@ namespace EmployeeManagementApp.Application.Services
         // Get all employees
         public async Task<IEnumerable<EmployeeDto>> GetAllEmployeesAsync()
         {
-            try
+            var employees = await _employeeRepository.GetAllEmployeesAsync();
+            var jobTitles = await _jobTitleRepository.GetAllJobTitlesAsync();
+
+            var employeeDtos = employees.Select(e => new EmployeeDto
             {
-                var employees = await _employeeRepository.GetAllEmployeesAsync();
-                var employeeDtos = _mapper.Map<IEnumerable<EmployeeDto>>(employees);
-                _logger.LogInformation("Fetched all employees successfully.");
-                return employeeDtos;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while fetching employees.");
-                throw;
-            }
+                Id = e.Id,
+                Name = e.Name,
+                Surname = e.Surname,
+                DateOfBirth = e.DateOfBirth,
+                JobTitleId = e.JobTitleId,
+                JobTitleName = jobTitles.FirstOrDefault(j => j.Id == e.JobTitleId)?.JobTitleName // Get the Job Title Name
+            });
+
+            return employeeDtos;
         }
+
 
         // Get employee by ID
         public async Task<EmployeeDto> GetEmployeeByIdAsync(int employeeId)

@@ -2,6 +2,8 @@
 using EmployeeManagementApp.Infrastructure.Interfaces;
 using EmployeeManagementApp.Domain.Models;
 using AutoMapper;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace EmployeeManagementApp.Application.Services
 {
@@ -18,36 +20,32 @@ namespace EmployeeManagementApp.Application.Services
             _mapper = mapper;
         }
 
+        // Get all projects
         public IEnumerable<ProjectDto> GetAllProjects()
         {
             var projects = _projectRepository.GetAllProjects();
-
-            // Return an empty collection if projects is null
-            if (projects == null)
-            {
-                return Enumerable.Empty<ProjectDto>();
-            }
-
-            // Use AutoMapper to map the list of Project to ProjectDto
-            return _mapper.Map<IEnumerable<ProjectDto>>(projects);
+            return projects == null ? Enumerable.Empty<ProjectDto>() : _mapper.Map<IEnumerable<ProjectDto>>(projects);
         }
 
+
+        // Get project by ID
         public ProjectDto GetProjectById(int id)
         {
             var project = _projectRepository.GetProjectById(id);
             return _mapper.Map<ProjectDto>(project);
         }
 
+        // Update project cost
         public void UpdateProjectCost(int projectId)
         {
             var cost = _projectCostCalculator.CalculateProjectCost(projectId);
             _projectRepository.UpdateProjectCost(projectId, cost);
         }
 
-
+        // Calculate project cost
         public decimal CalculateProjectCost(ProjectDto project)
         {
-            decimal totalCost = project.Cost; 
+            decimal totalCost = project.Cost;
 
             foreach (var employee in project.Employees)
             {
@@ -65,8 +63,6 @@ namespace EmployeeManagementApp.Application.Services
                     case 4: // Business Analyst
                         totalCost += 4500;
                         break;
-                    default:
-                        break;
                 }
             }
 
@@ -74,4 +70,3 @@ namespace EmployeeManagementApp.Application.Services
         }
     }
 }
-

@@ -24,8 +24,10 @@ namespace EmployeeManagementApp.Application.DTOs
         [Range(0, double.MaxValue, ErrorMessage = "Cost must be a non-negative number.")]
         public decimal Cost { get; set; }
 
-        public List<string> EmployeeNames { get; set; }
+        public List<string> EmployeeNames { get; set; } 
 
-        public List<ProjectEmployeeDto> Employees { get; set; }
+        public List<JobTitleDto> JobTitles { get; set; } 
+
+        public List<ProjectEmployeeDto> Employees { get; set; } 
     }
 }

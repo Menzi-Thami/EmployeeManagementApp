@@ -1,4 +1,4 @@
-﻿using EmployeeManagementApp.Domain.Models; //
+﻿using EmployeeManagementApp.Domain.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -11,5 +11,6 @@ namespace EmployeeManagementApp.Infrastructure.Repositories
         Task AddEmployeeAsync(Employee employee);
         Task UpdateEmployeeAsync(Employee employee);
         Task DeleteEmployeeAsync(int id);
+        Task<IEnumerable<Employee>> GetAllEmployeesWithJobTitlesAsync();
     }
 }

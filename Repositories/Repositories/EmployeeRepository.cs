@@ -1,8 +1,7 @@
 ﻿using Dapper;
 using EmployeeManagementApp.Domain.Models;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Configuration; 
-using Serilog;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
@@ -26,12 +25,33 @@ namespace EmployeeManagementApp.Infrastructure.Repositories
             {
                 using (IDbConnection db = new SqlConnection(_connectionString))
                 {
-                    return await db.QueryAsync<Employee>("SELECT * FROM Employee");
+                    const string sql = "SELECT * FROM Employee";
+                    return await db.QueryAsync<Employee>(sql);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while fetching employees");
+                _logger.LogError(ex, "Error occurred while fetching all employees");
+                throw;
+            }
+        }
+
+        public async Task<IEnumerable<Employee>> GetAllEmployeesWithJobTitlesAsync()
+        {
+            try
+            {
+                using (IDbConnection db = new SqlConnection(_connectionString))
+                {
+                    const string sql = @"
+                        SELECT e.*, jt.JobTitle 
+                        FROM Employee e
+                        LEFT JOIN JobTitle jt ON e.JobTitleId = jt.Id";
+                    return await db.QueryAsync<Employee>(sql);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while fetching employees with job titles");
                 throw;
             }
         }
@@ -42,7 +62,8 @@ namespace EmployeeManagementApp.Infrastructure.Repositories
             {
                 using (IDbConnection db = new SqlConnection(_connectionString))
                 {
-                    return await db.QueryFirstOrDefaultAsync<Employee>("SELECT * FROM Employee WHERE Id = @Id", new { Id = id });
+                    const string sql = "SELECT * FROM Employee WHERE Id = @Id";
+                    return await db.QueryFirstOrDefaultAsync<Employee>(sql, new { Id = id });
                 }
             }
             catch (Exception ex)
@@ -58,7 +79,7 @@ namespace EmployeeManagementApp.Infrastructure.Repositories
             {
                 using (IDbConnection db = new SqlConnection(_connectionString))
                 {
-                    var sql = "INSERT INTO Employee (Name, Surname, JobTitleId, DateOfBirth) VALUES (@Name, @Surname, @JobTitleId, @DateOfBirth)";
+                    const string sql = "INSERT INTO Employee (Name, Surname, JobTitleId, DateOfBirth) VALUES (@Name, @Surname, @JobTitleId, @DateOfBirth)";
                     await db.ExecuteAsync(sql, employee);
                 }
             }
@@ -75,7 +96,7 @@ namespace EmployeeManagementApp.Infrastructure.Repositories
             {
                 using (IDbConnection db = new SqlConnection(_connectionString))
                 {
-                    var sql = "UPDATE Employee SET Name = @Name, Surname = @Surname, JobTitleId = @JobTitleId, DateOfBirth = @DateOfBirth WHERE Id = @Id";
+                    const string sql = "UPDATE Employee SET Name = @Name, Surname = @Surname, JobTitleId = @JobTitleId, DateOfBirth = @DateOfBirth WHERE Id = @Id";
                     await db.ExecuteAsync(sql, employee);
                 }
             }
@@ -92,7 +113,7 @@ namespace EmployeeManagementApp.Infrastructure.Repositories
             {
                 using (IDbConnection db = new SqlConnection(_connectionString))
                 {
-                    var sql = "DELETE FROM Employee WHERE Id = @Id";
+                    const string sql = "DELETE FROM Employee WHERE Id = @Id";
                     await db.ExecuteAsync(sql, new { Id = id });
                 }
             }

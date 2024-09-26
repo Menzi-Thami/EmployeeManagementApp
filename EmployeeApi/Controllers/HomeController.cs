@@ -4,6 +4,7 @@ using EmployeeManagementApp.Application.Services;
 using EmployeeManagementApp.Domain.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace EmployeeApi.Controllers
 {
@@ -33,11 +34,11 @@ namespace EmployeeApi.Controllers
 
         // POST: /addemploy
         [HttpPost]
-        public IActionResult AddEmployee(EmployeeDto employeeDto)
+        public async Task<IActionResult> AddEmployee(EmployeeDto employeeDto)
         {
-            if (!ModelState.IsValid)
+            if (ModelState.IsValid)
             {
-                _employeeService.AddEmployeeAsync(employeeDto);
+                await _employeeService.AddEmployeeAsync(employeeDto);
                 return RedirectToAction("ViewEmployees");
             }
 
@@ -45,11 +46,16 @@ namespace EmployeeApi.Controllers
         }
 
         // GET: /viewemployees
-        public IActionResult ViewEmployees()
+        public async Task<IActionResult> ViewEmployees()
         {
-            // Retrieve all employees using the employee service
-            var employees = _employeeService.GetAllEmployeesAsync().Result;
+            var employees = await _employeeService.GetAllEmployeesAsync();
+            return View(employees);
+        }
 
+        // GET: /employeelist
+        public async Task<IActionResult> EmployeeList()
+        {
+            var employees = await _employeeService.GetAllEmployeesAsync();
             return View(employees);
         }
 
@@ -59,18 +65,16 @@ namespace EmployeeApi.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
+        // GET: /viewprojects
         public IActionResult ViewProjects()
         {
             var projects = _projectService.GetAllProjects();
 
-            
             if (projects == null || !projects.Any())
             {
-               
                 return View(new List<ProjectDto>());
             }
 
-            // Map the projects to ProjectDto and ensure EmployeeNames is initialized
             var viewModel = projects.Select(p => new ProjectDto
             {
                 Id = p.Id,
@@ -78,9 +82,7 @@ namespace EmployeeApi.Controllers
                 StartDate = p.StartDate,
                 EndDate = p.EndDate,
                 Cost = p.Cost,
-                EmployeeNames = p.Employees != null
-                    ? p.Employees.Select(e => $"{e.Name} {e.Surname}").ToList()
-                    : new List<string>() // Initialize to an empty list if Employees is null
+                EmployeeNames = p.Employees?.Select(e => $"{e.Name} {e.Surname}").ToList() ?? new List<string>()
             }).ToList();
 
             return View(viewModel);
