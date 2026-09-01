@@ -21,4 +21,12 @@
     <ProjectReference Include="..\Domain\EmployeeManagementApp.Domain.csproj" />
   </ItemGroup>
 
+  <!-- Config template shipped next to the executable; real values come from
+       user-secrets / environment variables, never from committed source. -->
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

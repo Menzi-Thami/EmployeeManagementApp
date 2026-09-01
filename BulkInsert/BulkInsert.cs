@@ -8,18 +8,27 @@ using EmployeeManagementApp.Domain.Models;
 using System.Data;
 using System.Diagnostics;
 using System.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
 
 namespace EmployeeManagementConsoleApp.Services
 {
     public class BulkInsertService : IBulkInsertService
     {
-        private readonly string _connectionString = "Server=(localdb)\\MSSQLLocalDB;Database=CodeWorks;Trusted_Connection=True;MultipleActiveResultSets=true"; // Hardcoded connection string
+        private readonly string _connectionString;
         private readonly ILogger<BulkInsertService> _logger;
         private readonly HttpClient _httpClient;
 
-        public BulkInsertService(ILogger<BulkInsertService> logger)
+        public BulkInsertService(ILogger<BulkInsertService> logger, IConfiguration configuration)
         {
             _logger = logger;
+
+            // Connection string comes from configuration (appsettings.json /
+            // environment variables / user-secrets) — never hardcoded in source.
+            _connectionString = configuration.GetConnectionString("DefaultConnection")
+                ?? throw new InvalidOperationException(
+                    "No 'DefaultConnection' connection string configured. Set it in appsettings.json, " +
+                    "in user-secrets, or via the environment variable 'ConnectionStrings__DefaultConnection'.");
+
             _httpClient = new HttpClient();
             _httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
         }

@@ -361,3 +361,8 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# Local configuration overrides holding real secrets/connection strings.
+# Real values belong in user-secrets or environment variables, never in git.
+appsettings.*.local.json
+appsettings.Local.json
+secrets.json
