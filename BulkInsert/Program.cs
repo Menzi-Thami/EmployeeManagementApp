@@ -27,7 +27,9 @@ namespace EmployeeManagementConsoleApp
          {
              services.AddLogging();
              services.AddScoped<IBulkInsertService>(provider =>
-                 new BulkInsertService(provider.GetRequiredService<ILogger<BulkInsertService>>()));
+                 new BulkInsertService(
+                     provider.GetRequiredService<ILogger<BulkInsertService>>(),
+                     provider.GetRequiredService<IConfiguration>()));
          });
 
     }
