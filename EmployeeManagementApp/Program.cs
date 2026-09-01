@@ -3,9 +3,10 @@ using Serilog;
 using EmployeeManagementApp.Infrastructure.Repositories;
 using EmployeeManagementApp.Infrastructure.Calculators;
 using EmployeeManagementApp.Application.Services;
-using EmployeeManagementApp.Infrastructure.Interfaces;
+using EmployeeManagementApp.Application.Common.Interfaces;
 using EmployeeManagementApp.Application.Mapping;
 using EmployeeManagementConsoleApp.Services;
+using EmployeeManagementApp.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +42,8 @@ builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<IBulkInsertService, BulkInsertService>();
 
 var app = builder.Build();
+
+app.UseMiddleware<GlobalExceptionMiddleware>();
 
 //// Configure the HTTP request pipeline.
 //if (!app.Environment.IsDevelopment())

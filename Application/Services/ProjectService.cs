@@ -1,5 +1,5 @@
 ﻿using EmployeeManagementApp.Application.DTOs;
-using EmployeeManagementApp.Infrastructure.Interfaces;
+using EmployeeManagementApp.Application.Common.Interfaces;
 using EmployeeManagementApp.Domain.Models;
 using AutoMapper;
 using System.Collections.Generic;

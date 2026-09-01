@@ -1,4 +1,4 @@
-﻿using EmployeeManagementApp.Infrastructure.Repositories;
+﻿using EmployeeManagementApp.Application.Common.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 

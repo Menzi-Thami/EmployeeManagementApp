@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EmployeeManagementApp.Infrastructure.Interfaces
+namespace EmployeeManagementApp.Application.Common.Interfaces
 {
     public interface IProjectCostCalculator
     {

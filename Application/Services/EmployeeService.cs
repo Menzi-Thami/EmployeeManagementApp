@@ -1,12 +1,12 @@
 ﻿using AutoMapper;
+using EmployeeManagementApp.Application.Common.Exceptions;
+using EmployeeManagementApp.Application.Common.Interfaces;
 using EmployeeManagementApp.Application.DTOs;
 using EmployeeManagementApp.Domain.Models;
-using EmployeeManagementApp.Infrastructure.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System;
-using EmployeeManagementApp.Infrastructure.Repositories;
 
 namespace EmployeeManagementApp.Application.Services
 {
@@ -107,14 +107,13 @@ namespace EmployeeManagementApp.Application.Services
             var employees = await _employeeRepository.GetAllEmployeesAsync();
             var jobTitles = await _jobTitleRepository.GetAllJobTitlesAsync();
 
-            var employeeDtos = employees.Select(e => new EmployeeDto
+            var employeeDtos = employees.Select(e =>
             {
-                Id = e.Id,
-                Name = e.Name,
-                Surname = e.Surname,
-                DateOfBirth = e.DateOfBirth,
-                JobTitleId = e.JobTitleId,
-                JobTitleName = jobTitles.FirstOrDefault(j => j.Id == e.JobTitleId)?.JobTitle 
+                var dto = _mapper.Map<EmployeeDto>(e);
+                // Employees fetched here have no JobTitle navigation loaded, so
+                // resolve the display name from the separately-fetched job titles.
+                dto.JobTitleName = jobTitles.FirstOrDefault(j => j.Id == e.JobTitleId)?.JobTitle;
+                return dto;
             });
 
             return employeeDtos;
@@ -124,24 +123,26 @@ namespace EmployeeManagementApp.Application.Services
         // Get employee by ID
         public async Task<EmployeeDto> GetEmployeeByIdAsync(int employeeId)
         {
+            Employee employee;
             try
             {
-                var employee = await _employeeRepository.GetEmployeeByIdAsync(employeeId);
-                if (employee == null)
-                {
-                    _logger.LogWarning($"Employee with ID {employeeId} not found.");
-                    return null;
-                }
-
-                var employeeDto = _mapper.Map<EmployeeDto>(employee);
-                _logger.LogInformation($"Fetched employee with ID {employeeId} successfully.");
-                return employeeDto;
+                employee = await _employeeRepository.GetEmployeeByIdAsync(employeeId);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error occurred while fetching employee with ID {employeeId}.");
                 throw;
             }
+
+            if (employee == null)
+            {
+                _logger.LogWarning($"Employee with ID {employeeId} not found.");
+                throw new NotFoundException($"Employee with ID {employeeId} was not found.");
+            }
+
+            var employeeDto = _mapper.Map<EmployeeDto>(employee);
+            _logger.LogInformation($"Fetched employee with ID {employeeId} successfully.");
+            return employeeDto;
         }
     }
 }
