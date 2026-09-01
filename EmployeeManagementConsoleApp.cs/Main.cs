@@ -3,6 +3,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using EmployeeManagementApp.Infrastructure.Repositories;
 using EmployeeManagementApp.Domain.Models;
+using EmployeeManagementApp.Application.Common.Interfaces;
 using System;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;

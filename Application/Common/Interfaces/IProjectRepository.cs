@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using EmployeeManagementApp.Domain.Models;
 
-namespace EmployeeManagementApp.Infrastructure.Interfaces
+namespace EmployeeManagementApp.Application.Common.Interfaces
 {
     public interface IProjectRepository
     {

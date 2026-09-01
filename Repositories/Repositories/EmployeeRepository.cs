@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using EmployeeManagementApp.Domain.Models;
+using EmployeeManagementApp.Application.Common.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Data;

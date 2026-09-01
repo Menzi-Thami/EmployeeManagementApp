@@ -1,5 +1,5 @@
 ﻿using Dapper;
-using EmployeeManagementApp.Infrastructure.Interfaces;
+using EmployeeManagementApp.Application.Common.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration; 
 using System.Data;

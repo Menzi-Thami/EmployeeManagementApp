@@ -1,4 +1,5 @@
 ﻿using EmployeeManagementApp.Domain.Models;
+using EmployeeManagementApp.Application.Common.Interfaces;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Dapper;

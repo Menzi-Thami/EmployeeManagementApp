@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace EmployeeManagementApp.Infrastructure.Repositories
+namespace EmployeeManagementApp.Application.Common.Interfaces
 {
     public interface IJobTitleRepository
     {
