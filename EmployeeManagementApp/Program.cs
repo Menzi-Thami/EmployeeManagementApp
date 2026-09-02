@@ -45,6 +45,10 @@ var app = builder.Build();
 
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
+// Structured HTTP request logging (method, path, status, elapsed) through the
+// already-configured Serilog pipeline.
+app.UseSerilogRequestLogging();
+
 // Send Strict-Transport-Security outside development (dev stays on plain HTTP).
 if (!app.Environment.IsDevelopment())
 {
