@@ -80,18 +80,18 @@ namespace EmployeeManagementConsoleApp.Services
 
                             // Perform the bulk copy
                             await bulkCopy.WriteToServerAsync(dataTable);
-                            _logger.LogInformation($"Inserted batch of {batch.Count} records.");
+                            _logger.LogInformation("Inserted batch of {BatchSize} records.", batch.Count);
                         }
                     }
                 }
 
                 stopwatch.Stop();
-                _logger.LogInformation($"Bulk insert completed successfully in {stopwatch.Elapsed.TotalSeconds} seconds.");
+                _logger.LogInformation("Bulk insert completed successfully in {ElapsedSeconds} seconds.", stopwatch.Elapsed.TotalSeconds);
             }
             catch (Exception ex)
             {
                 stopwatch.Stop();
-                _logger.LogError(ex, $"Error occurred during bulk insert after {stopwatch.Elapsed.TotalSeconds} seconds.");
+                _logger.LogError(ex, "Error occurred during bulk insert after {ElapsedSeconds} seconds.", stopwatch.Elapsed.TotalSeconds);
                 throw;
             }
         }

@@ -31,74 +31,45 @@ namespace EmployeeManagementApp.Application.Services
         // Add a new employee with job title
         public async Task AddEmployeeAsync(EmployeeDto employeeDto)
         {
-            try
+            var jobTitle = await _jobTitleRepository.GetJobTitleByIdAsync(employeeDto.JobTitleId);
+            if (jobTitle != null)
             {
-                var jobTitle = await _jobTitleRepository.GetJobTitleByIdAsync(employeeDto.JobTitleId);
-                if (jobTitle != null)
-                {
-                    employeeDto.JobTitleName = jobTitle.JobTitle;
-                }
-                else
-                {
-                    _logger.LogWarning($"Job title with ID {employeeDto.JobTitleId} not found.");
-                }
+                employeeDto.JobTitleName = jobTitle.JobTitle;
+            }
+            else
+            {
+                _logger.LogWarning("Job title {JobTitleId} not found for new employee.", employeeDto.JobTitleId);
+            }
 
-                var employee = _mapper.Map<Employee>(employeeDto);
-                await _employeeRepository.AddEmployeeAsync(employee);
-                _logger.LogInformation($"Employee {employee.Name} {employee.Surname} with job title {employeeDto.JobTitleName} added successfully.");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while adding employee.");
-                throw;
-            }
+            var employee = _mapper.Map<Employee>(employeeDto);
+            await _employeeRepository.AddEmployeeAsync(employee);
+            // Log identifiers only — not the employee's name/surname (PII).
+            _logger.LogInformation(
+                "Employee {EmployeeId} added successfully with job title {JobTitleId}.",
+                employee.Id, employeeDto.JobTitleId);
         }
 
         // Get all job titles
         public async Task<IEnumerable<JobTitleDto>> GetAllJobTitlesAsync()
         {
-            try
-            {
-                var jobTitles = await _jobTitleRepository.GetAllJobTitlesAsync();
-                _logger.LogInformation("Fetched all job titles successfully.");
-                return _mapper.Map<IEnumerable<JobTitleDto>>(jobTitles);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while fetching job titles.");
-                throw;
-            }
+            var jobTitles = await _jobTitleRepository.GetAllJobTitlesAsync();
+            _logger.LogInformation("Fetched all job titles successfully.");
+            return _mapper.Map<IEnumerable<JobTitleDto>>(jobTitles);
         }
 
         // Update an existing employee
         public async Task UpdateEmployeeAsync(EmployeeDto employeeDto)
         {
-            try
-            {
-                var employee = _mapper.Map<Employee>(employeeDto);
-                await _employeeRepository.UpdateEmployeeAsync(employee);
-                _logger.LogInformation($"Employee {employee.Name} {employee.Surname} updated successfully.");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error occurred while updating employee with ID {employeeDto.Id}.");
-                throw;
-            }
+            var employee = _mapper.Map<Employee>(employeeDto);
+            await _employeeRepository.UpdateEmployeeAsync(employee);
+            _logger.LogInformation("Employee {EmployeeId} updated successfully.", employeeDto.Id);
         }
 
         // Delete an employee by ID
         public async Task DeleteEmployeeAsync(int employeeId)
         {
-            try
-            {
-                await _employeeRepository.DeleteEmployeeAsync(employeeId);
-                _logger.LogInformation($"Employee with ID {employeeId} deleted successfully.");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error occurred while deleting employee with ID {employeeId}.");
-                throw;
-            }
+            await _employeeRepository.DeleteEmployeeAsync(employeeId);
+            _logger.LogInformation("Employee {EmployeeId} deleted successfully.", employeeId);
         }
 
         // Get all employees
@@ -123,25 +94,16 @@ namespace EmployeeManagementApp.Application.Services
         // Get employee by ID
         public async Task<EmployeeDto> GetEmployeeByIdAsync(int employeeId)
         {
-            Employee employee;
-            try
-            {
-                employee = await _employeeRepository.GetEmployeeByIdAsync(employeeId);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error occurred while fetching employee with ID {employeeId}.");
-                throw;
-            }
+            var employee = await _employeeRepository.GetEmployeeByIdAsync(employeeId);
 
             if (employee == null)
             {
-                _logger.LogWarning($"Employee with ID {employeeId} not found.");
+                _logger.LogWarning("Employee {EmployeeId} not found.", employeeId);
                 throw new NotFoundException($"Employee with ID {employeeId} was not found.");
             }
 
             var employeeDto = _mapper.Map<EmployeeDto>(employee);
-            _logger.LogInformation($"Fetched employee with ID {employeeId} successfully.");
+            _logger.LogInformation("Fetched employee {EmployeeId} successfully.", employeeId);
             return employeeDto;
         }
     }

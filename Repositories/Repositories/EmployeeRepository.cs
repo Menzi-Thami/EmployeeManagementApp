@@ -69,7 +69,7 @@ namespace EmployeeManagementApp.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error occurred while fetching employee with ID {id}");
+                _logger.LogError(ex, "Error occurred while fetching employee with ID {EmployeeId}", id);
                 throw;
             }
         }
@@ -103,7 +103,7 @@ namespace EmployeeManagementApp.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error occurred while updating employee with ID {employee.Id}");
+                _logger.LogError(ex, "Error occurred while updating employee with ID {EmployeeId}", employee.Id);
                 throw;
             }
         }
@@ -120,7 +120,7 @@ namespace EmployeeManagementApp.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error occurred while deleting employee with ID {id}");
+                _logger.LogError(ex, "Error occurred while deleting employee with ID {EmployeeId}", id);
                 throw;
             }
         }

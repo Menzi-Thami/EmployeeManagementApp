@@ -58,7 +58,7 @@ namespace EmployeeManagementApp.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error occurred while fetching project with ID {id}");
+                _logger.LogError(ex, "Error occurred while fetching project with ID {ProjectId}", id);
                 throw;
             }
         }
@@ -75,7 +75,7 @@ namespace EmployeeManagementApp.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error occurred while updating cost for project with ID {projectId}");
+                _logger.LogError(ex, "Error occurred while updating cost for project with ID {ProjectId}", projectId);
                 throw;
             }
         }

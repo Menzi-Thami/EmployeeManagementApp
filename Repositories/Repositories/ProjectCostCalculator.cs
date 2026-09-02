@@ -42,7 +42,7 @@ namespace EmployeeManagementApp.Infrastructure.Calculators
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error occurred while calculating cost for project with ID {projectId}");
+                _logger.LogError(ex, "Error occurred while calculating cost for project with ID {ProjectId}", projectId);
                 throw;
             }
         }
