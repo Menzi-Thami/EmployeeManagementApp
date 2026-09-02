@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using EmployeeManagementApp.Application.Common.Exceptions;
+﻿using EmployeeManagementApp.Application.Common.Exceptions;
 using EmployeeManagementApp.Application.Common.Interfaces;
 using EmployeeManagementApp.Application.DTOs;
 using EmployeeManagementApp.Domain.Models;
@@ -15,18 +14,48 @@ namespace EmployeeManagementApp.Application.Services
         private readonly IEmployeeRepository _employeeRepository;
         private readonly IJobTitleRepository _jobTitleRepository;
         private readonly ILogger<EmployeeService> _logger;
-        private readonly IMapper _mapper;
 
         public EmployeeService(IEmployeeRepository employeeRepository,
                                IJobTitleRepository jobTitleRepository,
-                               ILogger<EmployeeService> logger,
-                               IMapper mapper)
+                               ILogger<EmployeeService> logger)
         {
             _employeeRepository = employeeRepository;
             _jobTitleRepository = jobTitleRepository;
             _logger = logger;
-            _mapper = mapper;
         }
+
+        // Manual mapping (replaces the old MappingProfile).
+        private static EmployeeDto ToDto(Employee employee) => new EmployeeDto
+        {
+            Id = employee.Id,
+            Name = employee.Name,
+            Surname = employee.Surname,
+            JobTitleId = employee.JobTitleId,
+            // Mirrors the old ForMember(JobTitleName => src.JobTitle.JobTitle),
+            // which resolved to null when the JobTitle navigation wasn't loaded.
+            JobTitleName = employee.JobTitle?.JobTitle,
+            DateOfBirth = employee.DateOfBirth
+        };
+
+        private static Employee ToEntity(EmployeeDto dto) => new Employee
+        {
+            Id = dto.Id,
+            Name = dto.Name,
+            Surname = dto.Surname,
+            JobTitleId = dto.JobTitleId,
+            DateOfBirth = dto.DateOfBirth
+            // JobTitle navigation left null: the old EmployeeDto->Employee map
+            // never populated it either (no matching source member).
+        };
+
+        private static JobTitleDto ToDto(JobTitles jobTitle) => new JobTitleDto
+        {
+            Id = jobTitle.Id
+            // JobTitleName intentionally NOT set. The original
+            // JobTitles->JobTitleDto map left it null because the member names
+            // differ (source "JobTitle" vs destination "JobTitleName"). Preserved
+            // to keep behaviour identical.
+        };
 
         // Add a new employee with job title
         public async Task AddEmployeeAsync(EmployeeDto employeeDto)
@@ -41,7 +70,7 @@ namespace EmployeeManagementApp.Application.Services
                 _logger.LogWarning("Job title {JobTitleId} not found for new employee.", employeeDto.JobTitleId);
             }
 
-            var employee = _mapper.Map<Employee>(employeeDto);
+            var employee = ToEntity(employeeDto);
             await _employeeRepository.AddEmployeeAsync(employee);
             // Log identifiers only — not the employee's name/surname (PII).
             _logger.LogInformation(
@@ -54,13 +83,13 @@ namespace EmployeeManagementApp.Application.Services
         {
             var jobTitles = await _jobTitleRepository.GetAllJobTitlesAsync();
             _logger.LogInformation("Fetched all job titles successfully.");
-            return _mapper.Map<IEnumerable<JobTitleDto>>(jobTitles);
+            return jobTitles.Select(jt => ToDto(jt)).ToList();
         }
 
         // Update an existing employee
         public async Task UpdateEmployeeAsync(EmployeeDto employeeDto)
         {
-            var employee = _mapper.Map<Employee>(employeeDto);
+            var employee = ToEntity(employeeDto);
             await _employeeRepository.UpdateEmployeeAsync(employee);
             _logger.LogInformation("Employee {EmployeeId} updated successfully.", employeeDto.Id);
         }
@@ -80,7 +109,7 @@ namespace EmployeeManagementApp.Application.Services
 
             var employeeDtos = employees.Select(e =>
             {
-                var dto = _mapper.Map<EmployeeDto>(e);
+                var dto = ToDto(e);
                 // Employees fetched here have no JobTitle navigation loaded, so
                 // resolve the display name from the separately-fetched job titles.
                 dto.JobTitleName = jobTitles.FirstOrDefault(j => j.Id == e.JobTitleId)?.JobTitle;
@@ -102,7 +131,7 @@ namespace EmployeeManagementApp.Application.Services
                 throw new NotFoundException($"Employee with ID {employeeId} was not found.");
             }
 
-            var employeeDto = _mapper.Map<EmployeeDto>(employee);
+            var employeeDto = ToDto(employee);
             _logger.LogInformation("Fetched employee {EmployeeId} successfully.", employeeId);
             return employeeDto;
         }

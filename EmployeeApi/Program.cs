@@ -1,10 +1,8 @@
-using AutoMapper;
 using Serilog;
 using EmployeeManagementApp.Infrastructure.Repositories;
 using EmployeeManagementApp.Infrastructure.Calculators;
 using EmployeeManagementApp.Application.Services;
 using EmployeeManagementApp.Application.Common.Interfaces;
-using EmployeeManagementApp.Application.Mapping;
 using EmployeeManagementConsoleApp.Services;
 using EmployeeApi.Middleware;
 
@@ -20,9 +18,6 @@ builder.Host.UseSerilog((context, config) =>
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
-
-// Register AutoMapper with the MappingProfile
-builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 // Retrieve the connection string from configuration
 string connectionString = builder.Configuration.GetConnectionString("DefaultConnection");

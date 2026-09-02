@@ -2,11 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AutoMapper;
 using EmployeeManagementApp.Application.Common.Exceptions;
 using EmployeeManagementApp.Application.Common.Interfaces;
 using EmployeeManagementApp.Application.DTOs;
-using EmployeeManagementApp.Application.Mapping;
 using EmployeeManagementApp.Application.Services;
 using EmployeeManagementApp.Domain.Models;
 using Microsoft.Extensions.Logging;
@@ -21,17 +19,9 @@ namespace EmployeeManagementApp.UnitTests
         private readonly IEmployeeRepository _employeeRepository = Substitute.For<IEmployeeRepository>();
         private readonly IJobTitleRepository _jobTitleRepository = Substitute.For<IJobTitleRepository>();
         private readonly ILogger<EmployeeService> _logger = Substitute.For<ILogger<EmployeeService>>();
-        private readonly IMapper _mapper;
-
-        public EmployeeServiceTests()
-        {
-            // Use the real AutoMapper profile so mapping behaviour is genuinely exercised.
-            var config = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>());
-            _mapper = config.CreateMapper();
-        }
 
         private EmployeeService CreateSut() =>
-            new EmployeeService(_employeeRepository, _jobTitleRepository, _logger, _mapper);
+            new EmployeeService(_employeeRepository, _jobTitleRepository, _logger);
 
         [Fact]
         public async Task GetEmployeeByIdAsync_WhenEmployeeDoesNotExist_ThrowsNotFoundException()
