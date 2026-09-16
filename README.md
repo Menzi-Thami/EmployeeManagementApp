@@ -47,9 +47,9 @@ dotnet run --project EmployeeApi
 Connection strings come from configuration (`appsettings.json` / user secrets), not source.
 `MyDB.sql` in the repository root creates the schema.
 
-> Note on the schema: the `Password` column is a plain `varchar(50)`. That is how the
-> original script was written and it is kept here for fidelity — it is not how passwords
-> should be stored. Hashing it is open work.
+> Note on the schema: `MyDB.sql` declares `Users.PasswordHash`, not a plaintext password
+> column. Nothing in the application authenticates or reads that table — the column is
+> named for what it must hold if anything ever does.
 
 ## Tests
 
