@@ -37,7 +37,10 @@ namespace EmployeeManagementApp.API.Controllers
                 StartDate = p.StartDate,
                 EndDate = p.EndDate,
                 Cost = p.Cost,
-                EmployeeNames = p.Employees.Select(e => $"{e.Name} {e.Surname}").ToList()
+                // EmployeeNames is already populated by ProjectService.ToDto.
+                // Rebuilding it from p.Employees threw: that property is never
+                // populated by the mapping, so it is always null here.
+                EmployeeNames = p.EmployeeNames
             }).ToList();
 
             return View(viewModel);

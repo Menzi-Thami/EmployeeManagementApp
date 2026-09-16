@@ -7,6 +7,5 @@ namespace EmployeeManagementApp.Application.Services
         IEnumerable<ProjectDto> GetAllProjects();
         ProjectDto GetProjectById(int id);
         void UpdateProjectCost(int projectId);
-        decimal CalculateProjectCost(ProjectDto project);
     }
 }
