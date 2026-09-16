@@ -13,15 +13,15 @@ domain, plus two console utilities for bulk data work.
 | `Application/` | library | services and the repository interfaces they depend on |
 | `Repositories/` | library | EF Core + Dapper implementations of those interfaces |
 | `EmployeeApi/` | web API | the primary API |
-| `EmployeeManagementApp/` | web API | an earlier API over the same domain |
 | `BulkInsert/` | console | bulk-loads employee data with `SqlBulkCopy` |
 | `EmployeeManagementConsoleApp.cs/` | console | interactive add-employee tool |
 | `Tests/` | tests | xUnit + NSubstitute unit tests |
 
-**On the two web APIs:** they are genuinely parallel — `EmployeeManagementApp.API` came
-first and `EmployeeApi` replaced it, but both still build and neither has been retired.
-Only `EmployeeApi` is in the solution; CI builds the other one explicitly so it can't rot
-silently. Consolidating them is open work, not an oversight.
+**On the retired second API:** `EmployeeManagementApp.API` was an earlier web app over the
+same domain, replaced by `EmployeeApi`. It has been removed. It was never in the solution,
+nothing referenced it, and its controllers had defects `EmployeeApi` had already fixed —
+`AddEmployeeAsync` called without `await`, and `GetAllEmployeesAsync().Result` blocking on
+an async call. Keeping two divergent copies of the same endpoints was the larger risk.
 
 ## Architecture
 
@@ -40,7 +40,7 @@ and the library moved to commercial licensing.
 Needs the [.NET 10 SDK](https://dotnet.microsoft.com/download) and SQL Server.
 
 ```bash
-dotnet build EmployeeManagementApp/EmployeeManagementApp.sln
+dotnet build EmployeeManagementApp.sln
 dotnet run --project EmployeeApi
 ```
 
@@ -54,7 +54,7 @@ Connection strings come from configuration (`appsettings.json` / user secrets), 
 ## Tests
 
 ```bash
-dotnet test EmployeeManagementApp/EmployeeManagementApp.sln
+dotnet test EmployeeManagementApp.sln
 ```
 
 ## Licence
