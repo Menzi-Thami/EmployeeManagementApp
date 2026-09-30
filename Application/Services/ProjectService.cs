@@ -1,4 +1,5 @@
-﻿using EmployeeManagementApp.Application.DTOs;
+﻿using EmployeeManagementApp.Application.Common.Exceptions;
+using EmployeeManagementApp.Application.DTOs;
 using EmployeeManagementApp.Application.Common.Interfaces;
 using EmployeeManagementApp.Domain.Models;
 using System.Collections.Generic;
@@ -52,7 +53,13 @@ namespace EmployeeManagementApp.Application.Services
         public ProjectDto GetProjectById(int id)
         {
             var project = _projectRepository.GetProjectById(id);
-            return project == null ? null : ToDto(project);
+
+            if (project == null)
+            {
+                throw new NotFoundException($"Project with ID {id} was not found.");
+            }
+
+            return ToDto(project);
         }
 
         // Update project cost
@@ -62,31 +69,5 @@ namespace EmployeeManagementApp.Application.Services
             _projectRepository.UpdateProjectCost(projectId, cost);
         }
 
-        // Calculate project cost
-        public decimal CalculateProjectCost(ProjectDto project)
-        {
-            decimal totalCost = project.Cost;
-
-            foreach (var employee in project.Employees)
-            {
-                switch (employee.JobTitleId)
-                {
-                    case 1: // Developer
-                        totalCost += 2500;
-                        break;
-                    case 2: // DBA
-                        totalCost += 3000;
-                        break;
-                    case 3: // QA
-                        totalCost += 1000;
-                        break;
-                    case 4: // Business Analyst
-                        totalCost += 4500;
-                        break;
-                }
-            }
-
-            return totalCost;
-        }
     }
 }
