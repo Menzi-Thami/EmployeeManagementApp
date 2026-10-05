@@ -17,9 +17,9 @@ namespace EmployeeApi.Controllers
         }
 
         [HttpGet("{jobTitleId}")] 
-        public async Task<IActionResult> GetJobTitle(int jobTitleId)
+        public async Task<IActionResult> GetJobTitle(int jobTitleId, CancellationToken cancellationToken)
         {
-            var jobTitle = await _jobTitleRepository.GetJobTitleByIdAsync(jobTitleId); 
+            var jobTitle = await _jobTitleRepository.GetJobTitleByIdAsync(jobTitleId, cancellationToken);
             if (jobTitle != null)
             {
                 return Ok(new { jobTitleName = jobTitle.JobTitle }); 

@@ -35,7 +35,7 @@ namespace EmployeeApi.Controllers
 
         // POST: /addemploy
         [HttpPost]
-        public async Task<IActionResult> AddEmployee(EmployeeDto employeeDto)
+        public async Task<IActionResult> AddEmployee(EmployeeDto employeeDto, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
             {
@@ -44,7 +44,7 @@ namespace EmployeeApi.Controllers
 
             try
             {
-                await _employeeService.AddEmployeeAsync(employeeDto);
+                await _employeeService.AddEmployeeAsync(employeeDto, cancellationToken);
             }
             catch (ValidationException ex)
             {
@@ -64,16 +64,16 @@ namespace EmployeeApi.Controllers
         }
 
         // GET: /viewemployees
-        public async Task<IActionResult> ViewEmployees()
+        public async Task<IActionResult> ViewEmployees(CancellationToken cancellationToken)
         {
-            var employees = await _employeeService.GetAllEmployeesAsync();
+            var employees = await _employeeService.GetAllEmployeesAsync(cancellationToken);
             return View(employees);
         }
 
         // GET: /employeelist
-        public async Task<IActionResult> EmployeeList()
+        public async Task<IActionResult> EmployeeList(CancellationToken cancellationToken)
         {
-            var employees = await _employeeService.GetAllEmployeesAsync();
+            var employees = await _employeeService.GetAllEmployeesAsync(cancellationToken);
             return View(employees);
         }
 
@@ -84,9 +84,9 @@ namespace EmployeeApi.Controllers
         }
 
         // GET: /viewprojects
-        public IActionResult ViewProjects()
+        public async Task<IActionResult> ViewProjects(CancellationToken cancellationToken)
         {
-            var projects = _projectService.GetAllProjects();
+            var projects = await _projectService.GetAllProjectsAsync(cancellationToken);
             return View(projects);
         }
     }

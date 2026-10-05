@@ -1,10 +1,11 @@
-﻿using Dapper;
+using Dapper;
 using EmployeeManagementApp.Domain.Models;
 using EmployeeManagementApp.Application.Common.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace EmployeeManagementApp.Infrastructure.Repositories
@@ -20,7 +21,7 @@ namespace EmployeeManagementApp.Infrastructure.Repositories
             _logger = logger;
         }
 
-        public async Task<IEnumerable<Employee>> GetAllEmployeesAsync()
+        public async Task<IEnumerable<Employee>> GetAllEmployeesAsync(CancellationToken cancellationToken)
         {
             try
             {
@@ -34,7 +35,7 @@ namespace EmployeeManagementApp.Infrastructure.Repositories
                         LEFT JOIN JobTitle jt ON jt.Id = e.JobTitleId
                         ORDER BY e.Id";
                     return await db.QueryAsync<Employee, JobTitles, Employee>(
-                        sql,
+                        new CommandDefinition(sql, cancellationToken: cancellationToken),
                         (employee, jobTitle) =>
                         {
                             employee.JobTitle = jobTitle;
@@ -50,14 +51,15 @@ namespace EmployeeManagementApp.Infrastructure.Repositories
             }
         }
 
-        public async Task<Employee> GetEmployeeByIdAsync(int id)
+        public async Task<Employee?> GetEmployeeByIdAsync(int id, CancellationToken cancellationToken)
         {
             try
             {
                 using (IDbConnection db = new SqlConnection(_connectionString))
                 {
-                    const string sql = "SELECT * FROM Employee WHERE Id = @Id";
-                    return await db.QueryFirstOrDefaultAsync<Employee>(sql, new { Id = id });
+                    const string sql = "SELECT Id, Name, Surname, JobTitleId, DateOfBirth FROM Employee WHERE Id = @Id";
+                    return await db.QueryFirstOrDefaultAsync<Employee>(
+                        new CommandDefinition(sql, new { Id = id }, cancellationToken: cancellationToken));
                 }
             }
             catch (Exception ex)
@@ -67,14 +69,14 @@ namespace EmployeeManagementApp.Infrastructure.Repositories
             }
         }
 
-        public async Task AddEmployeeAsync(Employee employee)
+        public async Task AddEmployeeAsync(Employee employee, CancellationToken cancellationToken)
         {
             try
             {
                 using (IDbConnection db = new SqlConnection(_connectionString))
                 {
                     const string sql = "INSERT INTO Employee (Name, Surname, JobTitleId, DateOfBirth) VALUES (@Name, @Surname, @JobTitleId, @DateOfBirth)";
-                    await db.ExecuteAsync(sql, employee);
+                    await db.ExecuteAsync(new CommandDefinition(sql, employee, cancellationToken: cancellationToken));
                 }
             }
             catch (Exception ex)
@@ -84,14 +86,14 @@ namespace EmployeeManagementApp.Infrastructure.Repositories
             }
         }
 
-        public async Task UpdateEmployeeAsync(Employee employee)
+        public async Task UpdateEmployeeAsync(Employee employee, CancellationToken cancellationToken)
         {
             try
             {
                 using (IDbConnection db = new SqlConnection(_connectionString))
                 {
                     const string sql = "UPDATE Employee SET Name = @Name, Surname = @Surname, JobTitleId = @JobTitleId, DateOfBirth = @DateOfBirth WHERE Id = @Id";
-                    await db.ExecuteAsync(sql, employee);
+                    await db.ExecuteAsync(new CommandDefinition(sql, employee, cancellationToken: cancellationToken));
                 }
             }
             catch (Exception ex)
@@ -101,14 +103,14 @@ namespace EmployeeManagementApp.Infrastructure.Repositories
             }
         }
 
-        public async Task DeleteEmployeeAsync(int id)
+        public async Task DeleteEmployeeAsync(int id, CancellationToken cancellationToken)
         {
             try
             {
                 using (IDbConnection db = new SqlConnection(_connectionString))
                 {
                     const string sql = "DELETE FROM Employee WHERE Id = @Id";
-                    await db.ExecuteAsync(sql, new { Id = id });
+                    await db.ExecuteAsync(new CommandDefinition(sql, new { Id = id }, cancellationToken: cancellationToken));
                 }
             }
             catch (Exception ex)

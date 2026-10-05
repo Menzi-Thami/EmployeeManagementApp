@@ -41,12 +41,13 @@ namespace EmployeeManagementConsoleApp
             await host.StartAsync();
 
             var employeeService = host.Services.GetRequiredService<IEmployeeRepository>();
-            await AddEmployee(employeeService);
+            var stopping = host.Services.GetRequiredService<IHostApplicationLifetime>().ApplicationStopping;
+            await AddEmployee(employeeService, stopping);
 
             await host.StopAsync();
         }
 
-        private static async Task AddEmployee(IEmployeeRepository employeeRepository)
+        private static async Task AddEmployee(IEmployeeRepository employeeRepository, CancellationToken cancellationToken)
         {
             Console.WriteLine("Enter employee details:");
 
@@ -116,7 +117,7 @@ namespace EmployeeManagementConsoleApp
                 DateOfBirth = dateOfBirth
             };
 
-            await employeeRepository.AddEmployeeAsync(employee);
+            await employeeRepository.AddEmployeeAsync(employee, cancellationToken);
             Console.WriteLine("Employee added successfully!");
         }
 

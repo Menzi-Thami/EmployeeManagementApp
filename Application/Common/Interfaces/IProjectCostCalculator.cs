@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace EmployeeManagementApp.Application.Common.Interfaces
 {
+    /// <summary>The single source of the project pricing rule (priced by job title, in SQL).</summary>
     public interface IProjectCostCalculator
     {
-        decimal CalculateProjectCost(int projectId);
+        Task<decimal> CalculateProjectCostAsync(int projectId, CancellationToken cancellationToken);
     }
 }

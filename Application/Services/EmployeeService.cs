@@ -58,17 +58,17 @@ namespace EmployeeManagementApp.Application.Services
         };
 
         // Add a new employee with job title
-        public async Task AddEmployeeAsync(EmployeeDto employeeDto)
+        public async Task AddEmployeeAsync(EmployeeDto employeeDto, CancellationToken cancellationToken)
         {
             // Reject an unknown job title up front; inserting anyway hits FK_E_JTID and surfaces as a 500.
-            var jobTitle = await _jobTitleRepository.GetJobTitleByIdAsync(employeeDto.JobTitleId)
+            var jobTitle = await _jobTitleRepository.GetJobTitleByIdAsync(employeeDto.JobTitleId, cancellationToken)
                 ?? throw new ValidationException(
                     nameof(EmployeeDto.JobTitleId),
                     $"Job title {employeeDto.JobTitleId} does not exist.");
             employeeDto.JobTitleName = jobTitle.JobTitle;
 
             var employee = ToEntity(employeeDto);
-            await _employeeRepository.AddEmployeeAsync(employee);
+            await _employeeRepository.AddEmployeeAsync(employee, cancellationToken);
             // Log identifiers only — not the employee's name/surname (PII).
             _logger.LogInformation(
                 "Employee {EmployeeId} added successfully with job title {JobTitleId}.",
@@ -76,41 +76,41 @@ namespace EmployeeManagementApp.Application.Services
         }
 
         // Get all job titles
-        public async Task<IEnumerable<JobTitleDto>> GetAllJobTitlesAsync()
+        public async Task<IEnumerable<JobTitleDto>> GetAllJobTitlesAsync(CancellationToken cancellationToken)
         {
-            var jobTitles = await _jobTitleRepository.GetAllJobTitlesAsync();
+            var jobTitles = await _jobTitleRepository.GetAllJobTitlesAsync(cancellationToken);
             _logger.LogInformation("Fetched all job titles successfully.");
             return jobTitles.Select(jt => ToDto(jt)).ToList();
         }
 
         // Update an existing employee
-        public async Task UpdateEmployeeAsync(EmployeeDto employeeDto)
+        public async Task UpdateEmployeeAsync(EmployeeDto employeeDto, CancellationToken cancellationToken)
         {
             var employee = ToEntity(employeeDto);
-            await _employeeRepository.UpdateEmployeeAsync(employee);
+            await _employeeRepository.UpdateEmployeeAsync(employee, cancellationToken);
             _logger.LogInformation("Employee {EmployeeId} updated successfully.", employeeDto.Id);
         }
 
         // Delete an employee by ID
-        public async Task DeleteEmployeeAsync(int employeeId)
+        public async Task DeleteEmployeeAsync(int employeeId, CancellationToken cancellationToken)
         {
-            await _employeeRepository.DeleteEmployeeAsync(employeeId);
+            await _employeeRepository.DeleteEmployeeAsync(employeeId, cancellationToken);
             _logger.LogInformation("Employee {EmployeeId} deleted successfully.", employeeId);
         }
 
         // Get all employees
-        public async Task<IEnumerable<EmployeeDto>> GetAllEmployeesAsync()
+        public async Task<IEnumerable<EmployeeDto>> GetAllEmployeesAsync(CancellationToken cancellationToken)
         {
             // The repository loads each employee's JobTitle in the same query, so ToDto can read it.
-            var employees = await _employeeRepository.GetAllEmployeesAsync();
+            var employees = await _employeeRepository.GetAllEmployeesAsync(cancellationToken);
             return employees.Select(ToDto).ToList();
         }
 
 
         // Get employee by ID
-        public async Task<EmployeeDto> GetEmployeeByIdAsync(int employeeId)
+        public async Task<EmployeeDto> GetEmployeeByIdAsync(int employeeId, CancellationToken cancellationToken)
         {
-            var employee = await _employeeRepository.GetEmployeeByIdAsync(employeeId);
+            var employee = await _employeeRepository.GetEmployeeByIdAsync(employeeId, cancellationToken);
 
             if (employee == null)
             {

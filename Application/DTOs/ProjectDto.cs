@@ -25,7 +25,5 @@ namespace EmployeeManagementApp.Application.DTOs
         public decimal Cost { get; set; }
 
         public List<string> EmployeeNames { get; set; } = [];
-
-        public List<ProjectEmployeeDto> Employees { get; set; } 
     }
 }

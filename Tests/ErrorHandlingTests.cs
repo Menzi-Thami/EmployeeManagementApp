@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using EmployeeManagementApp.Application.Common.Exceptions;
 using EmployeeManagementApp.Application.DTOs;
@@ -17,7 +18,7 @@ namespace EmployeeManagementApp.UnitTests
         [Fact]
         public async Task ApiRoute_NotFoundException_Returns404ProblemDetails()
         {
-            factory.JobTitleRepository.GetJobTitleByIdAsync(404)
+            factory.JobTitleRepository.GetJobTitleByIdAsync(404, Arg.Any<CancellationToken>())
                 .ThrowsAsync(new NotFoundException("Job title 404 was not found."));
             var client = factory.CreateClient();
 
@@ -33,7 +34,7 @@ namespace EmployeeManagementApp.UnitTests
         [Fact]
         public async Task ApiRoute_UnexpectedException_Returns500WithoutExceptionText()
         {
-            factory.JobTitleRepository.GetJobTitleByIdAsync(500)
+            factory.JobTitleRepository.GetJobTitleByIdAsync(500, Arg.Any<CancellationToken>())
                 .ThrowsAsync(new ArgumentException("driver detail that must not leak"));
             var client = factory.CreateClient();
 
@@ -47,7 +48,7 @@ namespace EmployeeManagementApp.UnitTests
         [Fact]
         public async Task MvcPage_UnexpectedException_RendersTheErrorViewNotJson()
         {
-            factory.EmployeeService.GetAllEmployeesAsync()
+            factory.EmployeeService.GetAllEmployeesAsync(Arg.Any<CancellationToken>())
                 .ThrowsAsync(new InvalidOperationException("boom"));
             var client = factory.CreateClient();
 
@@ -61,7 +62,7 @@ namespace EmployeeManagementApp.UnitTests
         [Fact]
         public async Task AddEmployeePost_WithUnknownJobTitle_ShowsTheErrorOnTheForm()
         {
-            factory.EmployeeService.AddEmployeeAsync(Arg.Is<EmployeeDto>(e => e.Name == "Unknown"))
+            factory.EmployeeService.AddEmployeeAsync(Arg.Is<EmployeeDto>(e => e.Name == "Unknown"), Arg.Any<CancellationToken>())
                 .ThrowsAsync(new ValidationException(nameof(EmployeeDto.JobTitleId), "Job title 4 does not exist."));
             var client = factory.CreateClient();
 

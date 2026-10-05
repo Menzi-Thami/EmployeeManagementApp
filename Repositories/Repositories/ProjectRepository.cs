@@ -33,7 +33,7 @@ namespace EmployeeManagementApp.Infrastructure.Repositories
         private const string ProjectSummaryGroupBy = @"
                 GROUP BY p.Id, p.Name, p.Startdate, p.Enddate, p.Cost";
 
-        public IEnumerable<ProjectSummary> GetAllProjects()
+        public async Task<IReadOnlyList<ProjectSummary>> GetAllProjectsAsync(CancellationToken cancellationToken)
         {
             try
             {
@@ -42,7 +42,9 @@ namespace EmployeeManagementApp.Infrastructure.Repositories
                     const string sql = ProjectSummarySql + ProjectSummaryGroupBy + @"
                 ORDER BY p.Id";
 
-                    return db.Query<ProjectSummary>(sql).ToList();
+                    var projects = await db.QueryAsync<ProjectSummary>(
+                        new CommandDefinition(sql, cancellationToken: cancellationToken));
+                    return projects.ToList();
                 }
             }
             catch (Exception ex)
@@ -54,7 +56,7 @@ namespace EmployeeManagementApp.Infrastructure.Repositories
 
 
 
-        public ProjectSummary? GetProjectById(int id)
+        public async Task<ProjectSummary?> GetProjectByIdAsync(int id, CancellationToken cancellationToken)
         {
             try
             {
@@ -63,7 +65,8 @@ namespace EmployeeManagementApp.Infrastructure.Repositories
                     const string sql = ProjectSummarySql + @"
                 WHERE p.Id = @Id" + ProjectSummaryGroupBy;
 
-                    return db.QuerySingleOrDefault<ProjectSummary>(sql, new { Id = id });
+                    return await db.QuerySingleOrDefaultAsync<ProjectSummary>(
+                        new CommandDefinition(sql, new { Id = id }, cancellationToken: cancellationToken));
                 }
             }
             catch (Exception ex)
@@ -73,14 +76,15 @@ namespace EmployeeManagementApp.Infrastructure.Repositories
             }
         }
 
-        public void UpdateProjectCost(int projectId, decimal cost)
+        public async Task UpdateProjectCostAsync(int projectId, decimal cost, CancellationToken cancellationToken)
         {
             try
             {
                 using (IDbConnection db = new SqlConnection(_connectionString))
                 {
                     const string sql = "UPDATE Project SET Cost = @Cost WHERE Id = @ProjectId";
-                    db.Execute(sql, new { Cost = cost, ProjectId = projectId });
+                    await db.ExecuteAsync(
+                        new CommandDefinition(sql, new { Cost = cost, ProjectId = projectId }, cancellationToken: cancellationToken));
                 }
             }
             catch (Exception ex)

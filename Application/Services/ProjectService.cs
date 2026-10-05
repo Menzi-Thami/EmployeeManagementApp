@@ -1,4 +1,5 @@
-﻿using EmployeeManagementApp.Application.DTOs;
+using EmployeeManagementApp.Application.DTOs;
+using EmployeeManagementApp.Application.Common.Exceptions;
 using EmployeeManagementApp.Application.Common.Interfaces;
 using EmployeeManagementApp.Application.Common.Models;
 using System.Collections.Generic;
@@ -31,51 +32,25 @@ namespace EmployeeManagementApp.Application.Services
         };
 
         // Get all projects
-        public IEnumerable<ProjectDto> GetAllProjects()
+        public async Task<IReadOnlyList<ProjectDto>> GetAllProjectsAsync(CancellationToken cancellationToken)
         {
-            return _projectRepository.GetAllProjects().Select(ToDto).ToList();
+            var projects = await _projectRepository.GetAllProjectsAsync(cancellationToken);
+            return projects.Select(ToDto).ToList();
         }
-
 
         // Get project by ID
-        public ProjectDto? GetProjectById(int id)
+        public async Task<ProjectDto> GetProjectByIdAsync(int id, CancellationToken cancellationToken)
         {
-            var project = _projectRepository.GetProjectById(id);
-            return project == null ? null : ToDto(project);
+            var project = await _projectRepository.GetProjectByIdAsync(id, cancellationToken)
+                ?? throw new NotFoundException($"Project with ID {id} was not found.");
+            return ToDto(project);
         }
 
-        // Update project cost
-        public void UpdateProjectCost(int projectId)
+        // Recalculate and store the project cost. The pricing rule lives only in IProjectCostCalculator.
+        public async Task UpdateProjectCostAsync(int projectId, CancellationToken cancellationToken)
         {
-            var cost = _projectCostCalculator.CalculateProjectCost(projectId);
-            _projectRepository.UpdateProjectCost(projectId, cost);
-        }
-
-        // Calculate project cost
-        public decimal CalculateProjectCost(ProjectDto project)
-        {
-            decimal totalCost = project.Cost;
-
-            foreach (var employee in project.Employees)
-            {
-                switch (employee.JobTitleId)
-                {
-                    case 1: // Developer
-                        totalCost += 2500;
-                        break;
-                    case 2: // DBA
-                        totalCost += 3000;
-                        break;
-                    case 3: // QA
-                        totalCost += 1000;
-                        break;
-                    case 4: // Business Analyst
-                        totalCost += 4500;
-                        break;
-                }
-            }
-
-            return totalCost;
+            var cost = await _projectCostCalculator.CalculateProjectCostAsync(projectId, cancellationToken);
+            await _projectRepository.UpdateProjectCostAsync(projectId, cost, cancellationToken);
         }
     }
 }
