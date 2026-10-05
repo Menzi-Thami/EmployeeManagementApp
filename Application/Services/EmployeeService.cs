@@ -101,19 +101,9 @@ namespace EmployeeManagementApp.Application.Services
         // Get all employees
         public async Task<IEnumerable<EmployeeDto>> GetAllEmployeesAsync()
         {
+            // The repository loads each employee's JobTitle in the same query, so ToDto can read it.
             var employees = await _employeeRepository.GetAllEmployeesAsync();
-            var jobTitles = await _jobTitleRepository.GetAllJobTitlesAsync();
-
-            var employeeDtos = employees.Select(e =>
-            {
-                var dto = ToDto(e);
-                // Employees fetched here have no JobTitle navigation loaded, so
-                // resolve the display name from the separately-fetched job titles.
-                dto.JobTitleName = jobTitles.FirstOrDefault(j => j.Id == e.JobTitleId)?.JobTitle;
-                return dto;
-            });
-
-            return employeeDtos;
+            return employees.Select(ToDto).ToList();
         }
 
 

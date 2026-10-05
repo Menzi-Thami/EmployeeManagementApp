@@ -26,33 +26,26 @@ namespace EmployeeManagementApp.Infrastructure.Repositories
             {
                 using (IDbConnection db = new SqlConnection(_connectionString))
                 {
-                    const string sql = "SELECT * FROM Employee";
-                    return await db.QueryAsync<Employee>(sql);
+                    // One round trip: Dapper multi-mapping splits each row at the job title's Id.
+                    const string sql = @"
+                        SELECT e.Id, e.Name, e.Surname, e.JobTitleId, e.DateOfBirth,
+                               jt.Id, jt.JobTitle
+                        FROM Employee e
+                        LEFT JOIN JobTitle jt ON jt.Id = e.JobTitleId
+                        ORDER BY e.Id";
+                    return await db.QueryAsync<Employee, JobTitles, Employee>(
+                        sql,
+                        (employee, jobTitle) =>
+                        {
+                            employee.JobTitle = jobTitle;
+                            return employee;
+                        },
+                        splitOn: "Id");
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while fetching all employees");
-                throw;
-            }
-        }
-
-        public async Task<IEnumerable<Employee>> GetAllEmployeesWithJobTitlesAsync()
-        {
-            try
-            {
-                using (IDbConnection db = new SqlConnection(_connectionString))
-                {
-                    const string sql = @"
-                        SELECT e.*, jt.JobTitle 
-                        FROM Employee e
-                        LEFT JOIN JobTitle jt ON e.JobTitleId = jt.Id";
-                    return await db.QueryAsync<Employee>(sql);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while fetching employees with job titles");
                 throw;
             }
         }

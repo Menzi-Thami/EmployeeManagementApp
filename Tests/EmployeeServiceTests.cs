@@ -85,25 +85,21 @@ namespace EmployeeManagementApp.UnitTests
         }
 
         [Fact]
-        public async Task GetAllEmployeesAsync_MapsEmployeesAndResolvesJobTitleNameFromLookup()
+        public async Task GetAllEmployeesAsync_MapsEmployeesAndTheirLoadedJobTitleNames_InOneRepositoryCall()
         {
             var employees = new List<Employee>
             {
-                new Employee { Id = 1, Name = "Grace", Surname = "Hopper", JobTitleId = 2, DateOfBirth = new DateTime(1980, 1, 1) },
-                new Employee { Id = 2, Name = "Alan", Surname = "Turing", JobTitleId = 3, DateOfBirth = new DateTime(1975, 6, 23) }
-            };
-            var jobTitles = new List<JobTitles>
-            {
-                new JobTitles { Id = 2, JobTitle = "DBA" },
-                new JobTitles { Id = 3, JobTitle = "QA" }
+                new Employee { Id = 1, Name = "Grace", Surname = "Hopper", JobTitleId = 2, JobTitle = new JobTitles { Id = 2, JobTitle = "DBA" }, DateOfBirth = new DateTime(1980, 1, 1) },
+                new Employee { Id = 2, Name = "Alan", Surname = "Turing", JobTitleId = 3, JobTitle = new JobTitles { Id = 3, JobTitle = "QA" }, DateOfBirth = new DateTime(1975, 6, 23) }
             };
             _employeeRepository.GetAllEmployeesAsync().Returns(employees);
-            _jobTitleRepository.GetAllJobTitlesAsync().Returns(jobTitles);
             var sut = CreateSut();
 
-            var result = (await sut.GetAllEmployeesAsync()).ToList();
+            var result = await sut.GetAllEmployeesAsync();
 
-            result.Count.ShouldBe(2);
+            result.ShouldBeAssignableTo<IReadOnlyList<EmployeeDto>>(); // materialised, not a deferred Select
+            await _jobTitleRepository.DidNotReceive().GetAllJobTitlesAsync();
+            result.Count().ShouldBe(2);
 
             var grace = result.Single(e => e.Id == 1);
             grace.Name.ShouldBe("Grace");
