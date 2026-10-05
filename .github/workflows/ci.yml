@@ -34,6 +34,9 @@ jobs:
       - name: Test
         run: dotnet test "EmployeeManagementApp.sln" -c Release --no-build --logger "trx;LogFileName=results.trx"
 
+      # Build/test alone never noticed that the API could not be published (NETSDK1152).
+      - name: Publish EmployeeApi
+        run: dotnet publish "EmployeeApi/EmployeeApi.csproj" -c Release --no-restore -o "${{ runner.temp }}/employeeapi"
 
       - name: Upload test results
         if: always()

@@ -3,7 +3,6 @@ using EmployeeManagementApp.Infrastructure.Repositories;
 using EmployeeManagementApp.Infrastructure.Calculators;
 using EmployeeManagementApp.Application.Services;
 using EmployeeManagementApp.Application.Common.Interfaces;
-using EmployeeManagementConsoleApp.Services;
 using EmployeeApi.Middleware;
 
 
@@ -36,7 +35,6 @@ builder.Services.AddScoped<IJobTitleRepository>(provider =>
 // Register services
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
-builder.Services.AddScoped<BulkInsertService, BulkInsertService>();
 
 var app = builder.Build();
 

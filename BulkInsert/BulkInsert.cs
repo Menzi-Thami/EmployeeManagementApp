@@ -18,8 +18,13 @@ namespace EmployeeManagementConsoleApp.Services
         private readonly ILogger<BulkInsertService> _logger;
         private readonly HttpClient _httpClient;
 
-        public BulkInsertService(ILogger<BulkInsertService> logger, IConfiguration configuration)
+        // The feed returns a large polygon payload; give it longer than HttpClient's 100 s default, explicitly.
+        public static readonly TimeSpan DownloadTimeout = TimeSpan.FromMinutes(3);
+        public const string UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3";
+
+        public BulkInsertService(HttpClient httpClient, ILogger<BulkInsertService> logger, IConfiguration configuration)
         {
+            _httpClient = httpClient;
             _logger = logger;
 
             // Connection string comes from configuration (appsettings.json /
@@ -28,15 +33,12 @@ namespace EmployeeManagementConsoleApp.Services
                 ?? throw new InvalidOperationException(
                     "No 'DefaultConnection' connection string configured. Set it in appsettings.json, " +
                     "in user-secrets, or via the environment variable 'ConnectionStrings__DefaultConnection'.");
-
-            _httpClient = new HttpClient();
-            _httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
         }
 
-        public async Task FetchAndBulkInsertProjectLocationsAsync()
+        public async Task FetchAndBulkInsertProjectLocationsAsync(CancellationToken cancellationToken)
         {
             string url = "https://www.webafrica.co.za/includes/fibregeolocation.handler.php?cmd=sources&polygon=1";
-            var response = await _httpClient.GetStringAsync(url);
+            var response = await _httpClient.GetStringAsync(url, cancellationToken);
             var apiResponse = JsonSerializer.Deserialize<ApiResponse>(response);
 
             if (apiResponse?.Data != null)
@@ -48,7 +50,7 @@ namespace EmployeeManagementConsoleApp.Services
                     Location = d.Location
                 }).ToList();
 
-                await BulkInsertProjectLocationsAsync(locations);
+                await BulkInsertProjectLocationsAsync(locations, cancellationToken);
             }
             else
             {
@@ -56,7 +58,7 @@ namespace EmployeeManagementConsoleApp.Services
             }
         }
 
-        public async Task BulkInsertProjectLocationsAsync(List<ProjectLocations> locations)
+        public async Task BulkInsertProjectLocationsAsync(List<ProjectLocations> locations, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Starting bulk insert of project locations...");
 
@@ -69,7 +71,7 @@ namespace EmployeeManagementConsoleApp.Services
 
                 using (var connection = new SqlConnection(_connectionString))
                 {
-                    await connection.OpenAsync();
+                    await connection.OpenAsync(cancellationToken);
 
                     foreach (var batch in batchedData)
                     {
@@ -79,7 +81,7 @@ namespace EmployeeManagementConsoleApp.Services
                             var dataTable = ConvertToDataTable(batch);
 
                             // Perform the bulk copy
-                            await bulkCopy.WriteToServerAsync(dataTable);
+                            await bulkCopy.WriteToServerAsync(dataTable, cancellationToken);
                             _logger.LogInformation("Inserted batch of {BatchSize} records.", batch.Count);
                         }
                     }
