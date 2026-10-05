@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using EmployeeManagementApp.Infrastructure.Data;
 using EmployeeManagementApp.Infrastructure.Repositories;
 using EmployeeManagementApp.Domain.Models;
 using EmployeeManagementApp.Application.Common.Interfaces;
@@ -21,20 +22,15 @@ namespace EmployeeManagementConsoleApp
                 {
                     config.AddInMemoryCollection(new[]
                     {
-                        new KeyValuePair<string, string>("ConnectionStrings:DefaultConnection", "Server=(localdb)\\MSSQLLocalDB;Database=CodeWorks;Trusted_Connection=True;MultipleActiveResultSets=true")
+                        new KeyValuePair<string, string>("ConnectionStrings:DefaultConnection", "Server=(localdb)\\MSSQLLocalDB;Database=CodeWorks;Trusted_Connection=True;MultipleActiveResultSets=true;Encrypt=True;TrustServerCertificate=True")
                     });
                 })
                 .ConfigureServices((context, services) =>
                 {
                     services.AddLogging(configure => configure.AddConsole());
 
-                    // Use IConfiguration to get the connection string
-                    var configuration = context.Configuration;
-                    var connectionString = configuration.GetConnectionString("DefaultConnection");
-
-                    // Pass the connection string to EmployeeRepository
-                    services.AddScoped<IEmployeeRepository>(provider =>
-                        new EmployeeRepository(connectionString, provider.GetRequiredService<ILogger<EmployeeRepository>>()));
+                    services.AddDatabase();
+                    services.AddScoped<IEmployeeRepository, EmployeeRepository>();
                 })
                 .Build();
 

@@ -1,6 +1,7 @@
 using Serilog;
 using EmployeeManagementApp.Infrastructure.Repositories;
 using EmployeeManagementApp.Infrastructure.Calculators;
+using EmployeeManagementApp.Infrastructure.Data;
 using EmployeeManagementApp.Application.Services;
 using EmployeeManagementApp.Application.Common.Interfaces;
 using EmployeeApi.ErrorHandling;
@@ -24,18 +25,13 @@ builder.Services.AddRazorPages();
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
-// Retrieve the connection string from configuration
-string connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+// Validated connection string (fails at boot if missing) + Microsoft.Data.SqlClient connection factory.
+builder.Services.AddDatabase();
 
-// Register the repositories and services with the connection string
-builder.Services.AddScoped<IEmployeeRepository>(provider =>
-    new EmployeeRepository(connectionString, provider.GetRequiredService<ILogger<EmployeeRepository>>()));
-builder.Services.AddScoped<IProjectRepository>(provider =>
-    new ProjectRepository(connectionString, provider.GetRequiredService<ILogger<ProjectRepository>>()));
-builder.Services.AddScoped<IProjectCostCalculator>(provider =>
-    new ProjectCostCalculator(connectionString, provider.GetRequiredService<ILogger<ProjectCostCalculator>>()));
-builder.Services.AddScoped<IJobTitleRepository>(provider =>
-    new JobTitleRepository(connectionString, provider.GetRequiredService<ILogger<JobTitleRepository>>()));
+builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
+builder.Services.AddScoped<IProjectCostCalculator, ProjectCostCalculator>();
+builder.Services.AddScoped<IJobTitleRepository, JobTitleRepository>();
 
 
 // Register services

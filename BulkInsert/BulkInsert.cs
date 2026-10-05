@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 using EmployeeManagementApp.Domain.Models;
 using System.Data;
 using System.Diagnostics;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 
 namespace EmployeeManagementConsoleApp.Services
