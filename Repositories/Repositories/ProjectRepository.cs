@@ -1,83 +1,52 @@
-﻿using Dapper;
-using EmployeeManagementApp.Domain.Models;
+using Dapper;
 using EmployeeManagementApp.Application.Common.Interfaces;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Configuration; 
-using System.Data;
-using System.Data.SqlClient;
+using EmployeeManagementApp.Application.Common.Models;
 
 namespace EmployeeManagementApp.Infrastructure.Repositories
 {
-    public class ProjectRepository : IProjectRepository
+    public class ProjectRepository(IDbConnectionFactory connectionFactory) : IProjectRepository
     {
-        private readonly string _connectionString;
-        private readonly ILogger<ProjectRepository> _logger;
-
-        public ProjectRepository(string connectionString, ILogger<ProjectRepository> logger)
-        {
-            _connectionString = connectionString;
-            _logger = logger;
-        }
-
-        public IEnumerable<Project> GetAllProjects()
-        {
-            try
-            {
-                using (IDbConnection db = new SqlConnection(_connectionString))
-                {
-                    const string sql = @"
-                SELECT p.*, 
-                       STRING_AGG(CONCAT(e.Name, ' ', e.Surname), ', ') AS EmployeeNames,
-                       STRING_AGG(jt.JobTitle, ', ') AS JobTitles
+        // One row per project with the assigned employees' names aggregated. The CASE keeps a
+        // project with no employees at NULL (CONCAT would turn the missing row into " ").
+        private const string ProjectSummarySql = $@"
+                SELECT p.Id, p.Name, p.Startdate AS StartDate, p.Enddate AS EndDate, p.Cost,
+                       STRING_AGG(CASE WHEN e.Id IS NOT NULL THEN CONCAT(e.Name, ' ', e.Surname) END,
+                                  '{ProjectSummary.EmployeeNameSeparator}')
+                           WITHIN GROUP (ORDER BY e.Surname, e.Name) AS EmployeeNames
                 FROM Project p
                 LEFT JOIN ProjectEmployee pe ON p.Id = pe.ProjectID
-                LEFT JOIN Employee e ON pe.EmployeeID = e.Id
-                LEFT JOIN JobTitle jt ON e.JobTitleId = jt.Id
+                LEFT JOIN Employee e ON pe.EmployeeID = e.Id";
+
+        private const string ProjectSummaryGroupBy = @"
                 GROUP BY p.Id, p.Name, p.Startdate, p.Enddate, p.Cost";
 
-                    return db.Query<Project>(sql).ToList();
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while fetching all projects");
-                throw;
-            }
+        public async Task<IReadOnlyList<ProjectSummary>> GetAllProjectsAsync(CancellationToken cancellationToken)
+        {
+            await using var connection = connectionFactory.CreateConnection();
+            const string sql = ProjectSummarySql + ProjectSummaryGroupBy + @"
+                ORDER BY p.Id";
+
+            var projects = await connection.QueryAsync<ProjectSummary>(
+                new CommandDefinition(sql, cancellationToken: cancellationToken));
+            return projects.ToList();
         }
 
-
-
-        public Project GetProjectById(int id)
+        public async Task<ProjectSummary?> GetProjectByIdAsync(int id, CancellationToken cancellationToken)
         {
-            try
-            {
-                using (IDbConnection db = new SqlConnection(_connectionString))
-                {
-                    return db.QuerySingleOrDefault<Project>("SELECT * FROM Project WHERE Id = @Id", new { Id = id });
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while fetching project with ID {ProjectId}", id);
-                throw;
-            }
+            await using var connection = connectionFactory.CreateConnection();
+            const string sql = ProjectSummarySql + @"
+                WHERE p.Id = @Id" + ProjectSummaryGroupBy;
+
+            return await connection.QuerySingleOrDefaultAsync<ProjectSummary>(
+                new CommandDefinition(sql, new { Id = id }, cancellationToken: cancellationToken));
         }
 
-        public void UpdateProjectCost(int projectId, decimal cost)
+        public async Task UpdateProjectCostAsync(int projectId, decimal cost, CancellationToken cancellationToken)
         {
-            try
-            {
-                using (IDbConnection db = new SqlConnection(_connectionString))
-                {
-                    const string sql = "UPDATE Project SET Cost = @Cost WHERE Id = @ProjectId";
-                    db.Execute(sql, new { Cost = cost, ProjectId = projectId });
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while updating cost for project with ID {ProjectId}", projectId);
-                throw;
-            }
+            await using var connection = connectionFactory.CreateConnection();
+            const string sql = "UPDATE Project SET Cost = @Cost WHERE Id = @ProjectId";
+            await connection.ExecuteAsync(
+                new CommandDefinition(sql, new { Cost = cost, ProjectId = projectId }, cancellationToken: cancellationToken));
         }
     }
 }

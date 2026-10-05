@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using EmployeeManagementApp.Application.Common.Exceptions;
 using EmployeeManagementApp.Application.Common.Interfaces;
@@ -20,16 +21,44 @@ namespace EmployeeManagementApp.UnitTests
         private readonly IJobTitleRepository _jobTitleRepository = Substitute.For<IJobTitleRepository>();
         private readonly ILogger<EmployeeService> _logger = Substitute.For<ILogger<EmployeeService>>();
 
+        // A live token, so the substitutes only match when the service forwards it.
+        private readonly CancellationToken _ct = new CancellationTokenSource().Token;
+
         private EmployeeService CreateSut() =>
             new EmployeeService(_employeeRepository, _jobTitleRepository, _logger);
 
         [Fact]
-        public async Task GetEmployeeByIdAsync_WhenEmployeeDoesNotExist_ThrowsNotFoundException()
+        public async Task AddEmployeeAsync_WhenJobTitleMissing_ThrowsValidationAndDoesNotInsert()
         {
-            _employeeRepository.GetEmployeeByIdAsync(42).Returns((Employee?)null);
+            _jobTitleRepository.GetJobTitleByIdAsync(9, _ct).Returns((JobTitles?)null);
+            var dto = new EmployeeDto { Name = "Ada", Surname = "Lovelace", JobTitleId = 9, DateOfBirth = new DateTime(1990, 5, 1) };
             var sut = CreateSut();
 
-            var ex = await Should.ThrowAsync<NotFoundException>(() => sut.GetEmployeeByIdAsync(42));
+            var ex = await Should.ThrowAsync<ValidationException>(() => sut.AddEmployeeAsync(dto, _ct));
+
+            ex.Errors.ShouldContainKey(nameof(EmployeeDto.JobTitleId));
+            await _employeeRepository.Received(0).AddEmployeeAsync(Arg.Any<Employee>(), Arg.Any<CancellationToken>());
+        }
+
+        [Fact]
+        public async Task AddEmployeeAsync_WhenJobTitleExists_InsertsTheEmployee()
+        {
+            _jobTitleRepository.GetJobTitleByIdAsync(1, _ct).Returns(new JobTitles { Id = 1, JobTitle = "Developer" });
+            var dto = new EmployeeDto { Name = "Ada", Surname = "Lovelace", JobTitleId = 1, DateOfBirth = new DateTime(1990, 5, 1) };
+            var sut = CreateSut();
+
+            await sut.AddEmployeeAsync(dto, _ct);
+
+            await _employeeRepository.Received(1).AddEmployeeAsync(Arg.Is<Employee>(e => e.JobTitleId == 1 && e.Name == "Ada"), _ct);
+        }
+
+        [Fact]
+        public async Task GetEmployeeByIdAsync_WhenEmployeeDoesNotExist_ThrowsNotFoundException()
+        {
+            _employeeRepository.GetEmployeeByIdAsync(42, _ct).Returns((Employee?)null);
+            var sut = CreateSut();
+
+            var ex = await Should.ThrowAsync<NotFoundException>(() => sut.GetEmployeeByIdAsync(42, _ct));
             ex.Message.ShouldContain("42");
         }
 
@@ -45,10 +74,10 @@ namespace EmployeeManagementApp.UnitTests
                 JobTitle = new JobTitles { Id = 1, JobTitle = "Developer" },
                 DateOfBirth = new DateTime(1990, 5, 1)
             };
-            _employeeRepository.GetEmployeeByIdAsync(7).Returns(employee);
+            _employeeRepository.GetEmployeeByIdAsync(7, _ct).Returns(employee);
             var sut = CreateSut();
 
-            var dto = await sut.GetEmployeeByIdAsync(7);
+            var dto = await sut.GetEmployeeByIdAsync(7, _ct);
 
             dto.ShouldNotBeNull();
             dto.Id.ShouldBe(7);
@@ -60,25 +89,21 @@ namespace EmployeeManagementApp.UnitTests
         }
 
         [Fact]
-        public async Task GetAllEmployeesAsync_MapsEmployeesAndResolvesJobTitleNameFromLookup()
+        public async Task GetAllEmployeesAsync_MapsEmployeesAndTheirLoadedJobTitleNames_InOneRepositoryCall()
         {
             var employees = new List<Employee>
             {
-                new Employee { Id = 1, Name = "Grace", Surname = "Hopper", JobTitleId = 2, DateOfBirth = new DateTime(1980, 1, 1) },
-                new Employee { Id = 2, Name = "Alan", Surname = "Turing", JobTitleId = 3, DateOfBirth = new DateTime(1975, 6, 23) }
+                new Employee { Id = 1, Name = "Grace", Surname = "Hopper", JobTitleId = 2, JobTitle = new JobTitles { Id = 2, JobTitle = "DBA" }, DateOfBirth = new DateTime(1980, 1, 1) },
+                new Employee { Id = 2, Name = "Alan", Surname = "Turing", JobTitleId = 3, JobTitle = new JobTitles { Id = 3, JobTitle = "QA" }, DateOfBirth = new DateTime(1975, 6, 23) }
             };
-            var jobTitles = new List<JobTitles>
-            {
-                new JobTitles { Id = 2, JobTitle = "DBA" },
-                new JobTitles { Id = 3, JobTitle = "QA" }
-            };
-            _employeeRepository.GetAllEmployeesAsync().Returns(employees);
-            _jobTitleRepository.GetAllJobTitlesAsync().Returns(jobTitles);
+            _employeeRepository.GetAllEmployeesAsync(_ct).Returns(employees);
             var sut = CreateSut();
 
-            var result = (await sut.GetAllEmployeesAsync()).ToList();
+            var result = await sut.GetAllEmployeesAsync(_ct);
 
-            result.Count.ShouldBe(2);
+            result.ShouldBeAssignableTo<IReadOnlyList<EmployeeDto>>(); // materialised, not a deferred Select
+            await _jobTitleRepository.DidNotReceive().GetAllJobTitlesAsync(Arg.Any<CancellationToken>());
+            result.Count().ShouldBe(2);
 
             var grace = result.Single(e => e.Id == 1);
             grace.Name.ShouldBe("Grace");
@@ -99,10 +124,10 @@ namespace EmployeeManagementApp.UnitTests
                 new JobTitles { Id = 1, JobTitle = "Developer" },
                 new JobTitles { Id = 4, JobTitle = "Business Analyst" }
             };
-            _jobTitleRepository.GetAllJobTitlesAsync().Returns(jobTitles);
+            _jobTitleRepository.GetAllJobTitlesAsync(_ct).Returns(jobTitles);
             var sut = CreateSut();
 
-            var result = (await sut.GetAllJobTitlesAsync()).ToList();
+            var result = (await sut.GetAllJobTitlesAsync(_ct)).ToList();
 
             result.Count.ShouldBe(2);
             result.Select(j => j.Id).ShouldBe(new[] { 1, 4 }, ignoreOrder: true);

@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using EmployeeManagementApp.Domain.Models;
 using EmployeeManagementConsoleApp.Services;
-using Microsoft.Extensions.Configuration;
 
 namespace EmployeeManagementConsoleApp
 {
@@ -14,23 +10,30 @@ namespace EmployeeManagementConsoleApp
     {
         public static async Task Main(string[] args)
         {
-            var host = CreateHostBuilder(args).Build();
+            using var host = CreateHostBuilder(args).Build();
 
-            var bulkInsertService = host.Services.GetRequiredService<IBulkInsertService>();
+            // Starting the host wires Ctrl+C to ApplicationStopping, which cancels the work below.
+            await host.StartAsync();
+            var stopping = host.Services.GetRequiredService<IHostApplicationLifetime>().ApplicationStopping;
 
-            await bulkInsertService.FetchAndBulkInsertProjectLocationsAsync(); 
+            await using (var scope = host.Services.CreateAsyncScope())
+            {
+                var bulkInsertService = scope.ServiceProvider.GetRequiredService<IBulkInsertService>();
+                await bulkInsertService.FetchAndBulkInsertProjectLocationsAsync(stopping);
+            }
+
+            await host.StopAsync();
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
-     Host.CreateDefaultBuilder(args)
-         .ConfigureServices((context, services) =>
-         {
-             services.AddLogging();
-             services.AddScoped<IBulkInsertService>(provider =>
-                 new BulkInsertService(
-                     provider.GetRequiredService<ILogger<BulkInsertService>>(),
-                     provider.GetRequiredService<IConfiguration>()));
-         });
-
+            Host.CreateDefaultBuilder(args)
+                .ConfigureServices((context, services) =>
+                {
+                    services.AddHttpClient<IBulkInsertService, BulkInsertService>(client =>
+                    {
+                        client.Timeout = BulkInsertService.DownloadTimeout;
+                        client.DefaultRequestHeaders.UserAgent.ParseAdd(BulkInsertService.UserAgent);
+                    });
+                });
     }
 }

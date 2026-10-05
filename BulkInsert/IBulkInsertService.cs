@@ -1,7 +1,7 @@
-﻿using EmployeeManagementApp.Domain.Models;
+using EmployeeManagementApp.Domain.Models;
 
 public interface IBulkInsertService
 {
-    Task FetchAndBulkInsertProjectLocationsAsync(); 
-    Task BulkInsertProjectLocationsAsync(List<ProjectLocations> locations); 
+    Task FetchAndBulkInsertProjectLocationsAsync(CancellationToken cancellationToken);
+    Task BulkInsertProjectLocationsAsync(List<ProjectLocations> locations, CancellationToken cancellationToken);
 }

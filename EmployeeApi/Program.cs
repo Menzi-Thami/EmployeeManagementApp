@@ -1,10 +1,10 @@
 using Serilog;
 using EmployeeManagementApp.Infrastructure.Repositories;
 using EmployeeManagementApp.Infrastructure.Calculators;
+using EmployeeManagementApp.Infrastructure.Data;
 using EmployeeManagementApp.Application.Services;
 using EmployeeManagementApp.Application.Common.Interfaces;
-using EmployeeManagementConsoleApp.Services;
-using EmployeeApi.Middleware;
+using EmployeeApi.ErrorHandling;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,31 +16,33 @@ builder.Host.UseSerilog((context, config) =>
 });
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+// MVC (unlike Razor Pages) only validates antiforgery tokens when a filter asks it to.
+builder.Services.AddControllersWithViews(options =>
+    options.Filters.Add(new Microsoft.AspNetCore.Mvc.AutoValidateAntiforgeryTokenAttribute()));
 builder.Services.AddRazorPages();
 
-// Retrieve the connection string from configuration
-string connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+// One error shape: typed exceptions -> RFC 9457 ProblemDetails (with traceId) on /api routes.
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
-// Register the repositories and services with the connection string
-builder.Services.AddScoped<IEmployeeRepository>(provider =>
-    new EmployeeRepository(connectionString, provider.GetRequiredService<ILogger<EmployeeRepository>>()));
-builder.Services.AddScoped<IProjectRepository>(provider =>
-    new ProjectRepository(connectionString, provider.GetRequiredService<ILogger<ProjectRepository>>()));
-builder.Services.AddScoped<IProjectCostCalculator>(provider =>
-    new ProjectCostCalculator(connectionString, provider.GetRequiredService<ILogger<ProjectCostCalculator>>()));
-builder.Services.AddScoped<IJobTitleRepository>(provider =>
-    new JobTitleRepository(connectionString, provider.GetRequiredService<ILogger<JobTitleRepository>>()));
+// Validated connection string (fails at boot if missing) + Microsoft.Data.SqlClient connection factory.
+builder.Services.AddDatabase();
+
+builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
+builder.Services.AddScoped<IProjectCostCalculator, ProjectCostCalculator>();
+builder.Services.AddScoped<IJobTitleRepository, JobTitleRepository>();
 
 
 // Register services
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
-builder.Services.AddScoped<BulkInsertService, BulkInsertService>();
 
 var app = builder.Build();
 
-app.UseMiddleware<GlobalExceptionMiddleware>();
+// /api errors are written by GlobalExceptionHandler; anything it declines (MVC pages)
+// is re-executed as the /Home/Error view.
+app.UseExceptionHandler("/Home/Error");
 
 // Structured HTTP request logging (method, path, status, elapsed) through the
 // already-configured Serilog pipeline.

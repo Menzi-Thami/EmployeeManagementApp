@@ -1,6 +1,7 @@
-﻿using EmployeeManagementApp.Application.DTOs;
+using EmployeeManagementApp.Application.DTOs;
+using EmployeeManagementApp.Application.Common.Exceptions;
 using EmployeeManagementApp.Application.Common.Interfaces;
-using EmployeeManagementApp.Domain.Models;
+using EmployeeManagementApp.Application.Common.Models;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -17,76 +18,39 @@ namespace EmployeeManagementApp.Application.Services
             _projectCostCalculator = projectCostCalculator;
         }
 
-        // Manual mapping (replaces the old MappingProfile).
-        private static ProjectDto ToDto(Project project) => new ProjectDto
+        // The repository aggregates the names in SQL (STRING_AGG); split them once here.
+        private static ProjectDto ToDto(ProjectSummary project) => new ProjectDto
         {
             Id = project.Id,
             Name = project.Name,
             StartDate = project.StartDate,
             EndDate = project.EndDate,
             Cost = project.Cost,
-            EmployeeNames = project.ProjectEmployees?
-                .Select(pe => $"{pe.Employee.Name} {pe.Employee.Surname}")
-                .ToList(),
-            JobTitles = project.ProjectEmployees?
-                .Select(pe => new JobTitleDto
-                {
-                    Id = pe.Employee.JobTitleId,
-                    JobTitleName = pe.Employee.JobTitle.JobTitle
-                })
-                .ToList()
-            // Employees (List<ProjectEmployeeDto>) left null: the original
-            // Project->ProjectDto map had no configuration for it (no matching source
-            // member), so it was never populated.
+            EmployeeNames = project.EmployeeNames?
+                .Split(ProjectSummary.EmployeeNameSeparator, StringSplitOptions.RemoveEmptyEntries)
+                .ToList() ?? []
         };
 
         // Get all projects
-        public IEnumerable<ProjectDto> GetAllProjects()
+        public async Task<IReadOnlyList<ProjectDto>> GetAllProjectsAsync(CancellationToken cancellationToken)
         {
-            var projects = _projectRepository.GetAllProjects();
-            return projects == null ? Enumerable.Empty<ProjectDto>() : projects.Select(ToDto).ToList();
+            var projects = await _projectRepository.GetAllProjectsAsync(cancellationToken);
+            return projects.Select(ToDto).ToList();
         }
-
 
         // Get project by ID
-        public ProjectDto GetProjectById(int id)
+        public async Task<ProjectDto> GetProjectByIdAsync(int id, CancellationToken cancellationToken)
         {
-            var project = _projectRepository.GetProjectById(id);
-            return project == null ? null : ToDto(project);
+            var project = await _projectRepository.GetProjectByIdAsync(id, cancellationToken)
+                ?? throw new NotFoundException($"Project with ID {id} was not found.");
+            return ToDto(project);
         }
 
-        // Update project cost
-        public void UpdateProjectCost(int projectId)
+        // Recalculate and store the project cost. The pricing rule lives only in IProjectCostCalculator.
+        public async Task UpdateProjectCostAsync(int projectId, CancellationToken cancellationToken)
         {
-            var cost = _projectCostCalculator.CalculateProjectCost(projectId);
-            _projectRepository.UpdateProjectCost(projectId, cost);
-        }
-
-        // Calculate project cost
-        public decimal CalculateProjectCost(ProjectDto project)
-        {
-            decimal totalCost = project.Cost;
-
-            foreach (var employee in project.Employees)
-            {
-                switch (employee.JobTitleId)
-                {
-                    case 1: // Developer
-                        totalCost += 2500;
-                        break;
-                    case 2: // DBA
-                        totalCost += 3000;
-                        break;
-                    case 3: // QA
-                        totalCost += 1000;
-                        break;
-                    case 4: // Business Analyst
-                        totalCost += 4500;
-                        break;
-                }
-            }
-
-            return totalCost;
+            var cost = await _projectCostCalculator.CalculateProjectCostAsync(projectId, cancellationToken);
+            await _projectRepository.UpdateProjectCostAsync(projectId, cost, cancellationToken);
         }
     }
 }

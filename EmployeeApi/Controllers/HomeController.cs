@@ -1,4 +1,5 @@
 ﻿using EmployeeApi.Models;
+using EmployeeManagementApp.Application.Common.Exceptions;
 using EmployeeManagementApp.Application.DTOs;
 using EmployeeManagementApp.Application.Services;
 using EmployeeManagementApp.Domain.Models;
@@ -34,28 +35,45 @@ namespace EmployeeApi.Controllers
 
         // POST: /addemploy
         [HttpPost]
-        public async Task<IActionResult> AddEmployee(EmployeeDto employeeDto)
+        public async Task<IActionResult> AddEmployee(EmployeeDto employeeDto, CancellationToken cancellationToken)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                await _employeeService.AddEmployeeAsync(employeeDto);
-                return RedirectToAction("ViewEmployees");
+                return View(employeeDto);
             }
 
-            return View(employeeDto);
+            try
+            {
+                await _employeeService.AddEmployeeAsync(employeeDto, cancellationToken);
+            }
+            catch (ValidationException ex)
+            {
+                // A business-rule failure belongs on the form, next to the field, not on an error page.
+                foreach (var (field, messages) in ex.Errors)
+                {
+                    foreach (var message in messages)
+                    {
+                        ModelState.AddModelError(field, message);
+                    }
+                }
+
+                return View(employeeDto);
+            }
+
+            return RedirectToAction("ViewEmployees");
         }
 
         // GET: /viewemployees
-        public async Task<IActionResult> ViewEmployees()
+        public async Task<IActionResult> ViewEmployees(CancellationToken cancellationToken)
         {
-            var employees = await _employeeService.GetAllEmployeesAsync();
+            var employees = await _employeeService.GetAllEmployeesAsync(cancellationToken);
             return View(employees);
         }
 
         // GET: /employeelist
-        public async Task<IActionResult> EmployeeList()
+        public async Task<IActionResult> EmployeeList(CancellationToken cancellationToken)
         {
-            var employees = await _employeeService.GetAllEmployeesAsync();
+            var employees = await _employeeService.GetAllEmployeesAsync(cancellationToken);
             return View(employees);
         }
 
@@ -66,26 +84,10 @@ namespace EmployeeApi.Controllers
         }
 
         // GET: /viewprojects
-        public IActionResult ViewProjects()
+        public async Task<IActionResult> ViewProjects(CancellationToken cancellationToken)
         {
-            var projects = _projectService.GetAllProjects();
-
-            if (projects == null || !projects.Any())
-            {
-                return View(new List<ProjectDto>());
-            }
-
-            var viewModel = projects.Select(p => new ProjectDto
-            {
-                Id = p.Id,
-                Name = p.Name,
-                StartDate = p.StartDate,
-                EndDate = p.EndDate,
-                Cost = p.Cost,
-                EmployeeNames = p.Employees?.Select(e => $"{e.Name} {e.Surname}").ToList() ?? new List<string>()
-            }).ToList();
-
-            return View(viewModel);
+            var projects = await _projectService.GetAllProjectsAsync(cancellationToken);
+            return View(projects);
         }
     }
 }
