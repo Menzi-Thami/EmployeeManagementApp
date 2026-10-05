@@ -65,16 +65,15 @@ namespace EmployeeManagementApp.UnitTests
             factory.EmployeeService.AddEmployeeAsync(Arg.Is<EmployeeDto>(e => e.Name == "Unknown"), Arg.Any<CancellationToken>())
                 .ThrowsAsync(new ValidationException(nameof(EmployeeDto.JobTitleId), "Job title 4 does not exist."));
             var client = factory.CreateClient();
+            var form = await AntiforgeryTests.FormWithTokenAsync(client);
+            form["Name"] = "Unknown";
+            form["Surname"] = "Person";
+            form["JobTitleId"] = "4";
+            // The form's read-only field; the page's script fills it, even with "Job Title not found".
+            form["JobTitleName"] = "Job Title not found";
+            form["DateOfBirth"] = "1990-05-01";
 
-            var response = await client.PostAsync("/Home/AddEmployee", new FormUrlEncodedContent(new Dictionary<string, string>
-            {
-                ["Name"] = "Unknown",
-                ["Surname"] = "Person",
-                ["JobTitleId"] = "4",
-                // The form's read-only field; the page's script fills it, even with "Job Title not found".
-                ["JobTitleName"] = "Job Title not found",
-                ["DateOfBirth"] = "1990-05-01"
-            }));
+            var response = await client.PostAsync("/Home/AddEmployee", new FormUrlEncodedContent(form));
 
             response.StatusCode.ShouldBe(HttpStatusCode.OK);
             (await response.Content.ReadAsStringAsync()).ShouldContain("Job title 4 does not exist.");

@@ -15,7 +15,9 @@ builder.Host.UseSerilog((context, config) =>
 });
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+// MVC (unlike Razor Pages) only validates antiforgery tokens when a filter asks it to.
+builder.Services.AddControllersWithViews(options =>
+    options.Filters.Add(new Microsoft.AspNetCore.Mvc.AutoValidateAntiforgeryTokenAttribute()));
 builder.Services.AddRazorPages();
 
 // One error shape: typed exceptions -> RFC 9457 ProblemDetails (with traceId) on /api routes.
