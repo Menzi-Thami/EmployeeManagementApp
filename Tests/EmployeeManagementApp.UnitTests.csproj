@@ -22,6 +22,11 @@
     <ProjectReference Include="..\Application\EmployeeManagementApp.Application.csproj" />
     <ProjectReference Include="..\Domain\EmployeeManagementApp.Domain.csproj" />
     <ProjectReference Include="..\BulkInsert\BulkInsert.csproj" />
+    <ProjectReference Include="..\EmployeeApi\EmployeeApi.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
 </Project>

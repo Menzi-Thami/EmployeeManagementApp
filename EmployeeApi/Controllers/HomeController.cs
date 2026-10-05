@@ -69,23 +69,7 @@ namespace EmployeeApi.Controllers
         public IActionResult ViewProjects()
         {
             var projects = _projectService.GetAllProjects();
-
-            if (projects == null || !projects.Any())
-            {
-                return View(new List<ProjectDto>());
-            }
-
-            var viewModel = projects.Select(p => new ProjectDto
-            {
-                Id = p.Id,
-                Name = p.Name,
-                StartDate = p.StartDate,
-                EndDate = p.EndDate,
-                Cost = p.Cost,
-                EmployeeNames = p.Employees?.Select(e => $"{e.Name} {e.Surname}").ToList() ?? new List<string>()
-            }).ToList();
-
-            return View(viewModel);
+            return View(projects);
         }
     }
 }

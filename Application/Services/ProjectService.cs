@@ -1,6 +1,6 @@
 ﻿using EmployeeManagementApp.Application.DTOs;
 using EmployeeManagementApp.Application.Common.Interfaces;
-using EmployeeManagementApp.Domain.Models;
+using EmployeeManagementApp.Application.Common.Models;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -17,39 +17,28 @@ namespace EmployeeManagementApp.Application.Services
             _projectCostCalculator = projectCostCalculator;
         }
 
-        // Manual mapping (replaces the old MappingProfile).
-        private static ProjectDto ToDto(Project project) => new ProjectDto
+        // The repository aggregates the names in SQL (STRING_AGG); split them once here.
+        private static ProjectDto ToDto(ProjectSummary project) => new ProjectDto
         {
             Id = project.Id,
             Name = project.Name,
             StartDate = project.StartDate,
             EndDate = project.EndDate,
             Cost = project.Cost,
-            EmployeeNames = project.ProjectEmployees?
-                .Select(pe => $"{pe.Employee.Name} {pe.Employee.Surname}")
-                .ToList(),
-            JobTitles = project.ProjectEmployees?
-                .Select(pe => new JobTitleDto
-                {
-                    Id = pe.Employee.JobTitleId,
-                    JobTitleName = pe.Employee.JobTitle.JobTitle
-                })
-                .ToList()
-            // Employees (List<ProjectEmployeeDto>) left null: the original
-            // Project->ProjectDto map had no configuration for it (no matching source
-            // member), so it was never populated.
+            EmployeeNames = project.EmployeeNames?
+                .Split(ProjectSummary.EmployeeNameSeparator, StringSplitOptions.RemoveEmptyEntries)
+                .ToList() ?? []
         };
 
         // Get all projects
         public IEnumerable<ProjectDto> GetAllProjects()
         {
-            var projects = _projectRepository.GetAllProjects();
-            return projects == null ? Enumerable.Empty<ProjectDto>() : projects.Select(ToDto).ToList();
+            return _projectRepository.GetAllProjects().Select(ToDto).ToList();
         }
 
 
         // Get project by ID
-        public ProjectDto GetProjectById(int id)
+        public ProjectDto? GetProjectById(int id)
         {
             var project = _projectRepository.GetProjectById(id);
             return project == null ? null : ToDto(project);

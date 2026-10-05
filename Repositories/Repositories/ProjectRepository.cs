@@ -1,6 +1,6 @@
 ﻿using Dapper;
-using EmployeeManagementApp.Domain.Models;
 using EmployeeManagementApp.Application.Common.Interfaces;
+using EmployeeManagementApp.Application.Common.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration; 
 using System.Data;
@@ -19,23 +19,30 @@ namespace EmployeeManagementApp.Infrastructure.Repositories
             _logger = logger;
         }
 
-        public IEnumerable<Project> GetAllProjects()
+        // One row per project with the assigned employees' names aggregated. The CASE keeps a
+        // project with no employees at NULL (CONCAT would turn the missing row into " ").
+        private const string ProjectSummarySql = $@"
+                SELECT p.Id, p.Name, p.Startdate AS StartDate, p.Enddate AS EndDate, p.Cost,
+                       STRING_AGG(CASE WHEN e.Id IS NOT NULL THEN CONCAT(e.Name, ' ', e.Surname) END,
+                                  '{ProjectSummary.EmployeeNameSeparator}')
+                           WITHIN GROUP (ORDER BY e.Surname, e.Name) AS EmployeeNames
+                FROM Project p
+                LEFT JOIN ProjectEmployee pe ON p.Id = pe.ProjectID
+                LEFT JOIN Employee e ON pe.EmployeeID = e.Id";
+
+        private const string ProjectSummaryGroupBy = @"
+                GROUP BY p.Id, p.Name, p.Startdate, p.Enddate, p.Cost";
+
+        public IEnumerable<ProjectSummary> GetAllProjects()
         {
             try
             {
                 using (IDbConnection db = new SqlConnection(_connectionString))
                 {
-                    const string sql = @"
-                SELECT p.*, 
-                       STRING_AGG(CONCAT(e.Name, ' ', e.Surname), ', ') AS EmployeeNames,
-                       STRING_AGG(jt.JobTitle, ', ') AS JobTitles
-                FROM Project p
-                LEFT JOIN ProjectEmployee pe ON p.Id = pe.ProjectID
-                LEFT JOIN Employee e ON pe.EmployeeID = e.Id
-                LEFT JOIN JobTitle jt ON e.JobTitleId = jt.Id
-                GROUP BY p.Id, p.Name, p.Startdate, p.Enddate, p.Cost";
+                    const string sql = ProjectSummarySql + ProjectSummaryGroupBy + @"
+                ORDER BY p.Id";
 
-                    return db.Query<Project>(sql).ToList();
+                    return db.Query<ProjectSummary>(sql).ToList();
                 }
             }
             catch (Exception ex)
@@ -47,13 +54,16 @@ namespace EmployeeManagementApp.Infrastructure.Repositories
 
 
 
-        public Project GetProjectById(int id)
+        public ProjectSummary? GetProjectById(int id)
         {
             try
             {
                 using (IDbConnection db = new SqlConnection(_connectionString))
                 {
-                    return db.QuerySingleOrDefault<Project>("SELECT * FROM Project WHERE Id = @Id", new { Id = id });
+                    const string sql = ProjectSummarySql + @"
+                WHERE p.Id = @Id" + ProjectSummaryGroupBy;
+
+                    return db.QuerySingleOrDefault<ProjectSummary>(sql, new { Id = id });
                 }
             }
             catch (Exception ex)
