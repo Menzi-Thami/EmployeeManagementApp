@@ -1,4 +1,5 @@
 ﻿using EmployeeApi.Models;
+using EmployeeManagementApp.Application.Common.Exceptions;
 using EmployeeManagementApp.Application.DTOs;
 using EmployeeManagementApp.Application.Services;
 using EmployeeManagementApp.Domain.Models;
@@ -36,13 +37,30 @@ namespace EmployeeApi.Controllers
         [HttpPost]
         public async Task<IActionResult> AddEmployee(EmployeeDto employeeDto)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                await _employeeService.AddEmployeeAsync(employeeDto);
-                return RedirectToAction("ViewEmployees");
+                return View(employeeDto);
             }
 
-            return View(employeeDto);
+            try
+            {
+                await _employeeService.AddEmployeeAsync(employeeDto);
+            }
+            catch (ValidationException ex)
+            {
+                // A business-rule failure belongs on the form, next to the field, not on an error page.
+                foreach (var (field, messages) in ex.Errors)
+                {
+                    foreach (var message in messages)
+                    {
+                        ModelState.AddModelError(field, message);
+                    }
+                }
+
+                return View(employeeDto);
+            }
+
+            return RedirectToAction("ViewEmployees");
         }
 
         // GET: /viewemployees

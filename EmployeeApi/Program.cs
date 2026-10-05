@@ -3,7 +3,7 @@ using EmployeeManagementApp.Infrastructure.Repositories;
 using EmployeeManagementApp.Infrastructure.Calculators;
 using EmployeeManagementApp.Application.Services;
 using EmployeeManagementApp.Application.Common.Interfaces;
-using EmployeeApi.Middleware;
+using EmployeeApi.ErrorHandling;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +17,10 @@ builder.Host.UseSerilog((context, config) =>
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+
+// One error shape: typed exceptions -> RFC 9457 ProblemDetails (with traceId) on /api routes.
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 // Retrieve the connection string from configuration
 string connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -38,7 +42,9 @@ builder.Services.AddScoped<IProjectService, ProjectService>();
 
 var app = builder.Build();
 
-app.UseMiddleware<GlobalExceptionMiddleware>();
+// /api errors are written by GlobalExceptionHandler; anything it declines (MVC pages)
+// is re-executed as the /Home/Error view.
+app.UseExceptionHandler("/Home/Error");
 
 // Structured HTTP request logging (method, path, status, elapsed) through the
 // already-configured Serilog pipeline.

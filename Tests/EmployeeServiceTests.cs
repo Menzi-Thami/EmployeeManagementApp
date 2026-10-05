@@ -24,6 +24,31 @@ namespace EmployeeManagementApp.UnitTests
             new EmployeeService(_employeeRepository, _jobTitleRepository, _logger);
 
         [Fact]
+        public async Task AddEmployeeAsync_WhenJobTitleMissing_ThrowsValidationAndDoesNotInsert()
+        {
+            _jobTitleRepository.GetJobTitleByIdAsync(9).Returns((JobTitles)null!);
+            var dto = new EmployeeDto { Name = "Ada", Surname = "Lovelace", JobTitleId = 9, DateOfBirth = new DateTime(1990, 5, 1) };
+            var sut = CreateSut();
+
+            var ex = await Should.ThrowAsync<ValidationException>(() => sut.AddEmployeeAsync(dto));
+
+            ex.Errors.ShouldContainKey(nameof(EmployeeDto.JobTitleId));
+            await _employeeRepository.Received(0).AddEmployeeAsync(Arg.Any<Employee>());
+        }
+
+        [Fact]
+        public async Task AddEmployeeAsync_WhenJobTitleExists_InsertsTheEmployee()
+        {
+            _jobTitleRepository.GetJobTitleByIdAsync(1).Returns(new JobTitles { Id = 1, JobTitle = "Developer" });
+            var dto = new EmployeeDto { Name = "Ada", Surname = "Lovelace", JobTitleId = 1, DateOfBirth = new DateTime(1990, 5, 1) };
+            var sut = CreateSut();
+
+            await sut.AddEmployeeAsync(dto);
+
+            await _employeeRepository.Received(1).AddEmployeeAsync(Arg.Is<Employee>(e => e.JobTitleId == 1 && e.Name == "Ada"));
+        }
+
+        [Fact]
         public async Task GetEmployeeByIdAsync_WhenEmployeeDoesNotExist_ThrowsNotFoundException()
         {
             _employeeRepository.GetEmployeeByIdAsync(42).Returns((Employee?)null);

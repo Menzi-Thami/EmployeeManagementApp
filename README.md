@@ -29,8 +29,10 @@ Dependencies point inward. The repository *interfaces* live in `Application`, an
 `Repositories` implements them — so `Application` has no reference to the data layer, and a
 test can substitute a repository without a database. `Domain` references nothing at all.
 
-`NotFoundException` is translated to a `404` by middleware in both web apps rather than
-being caught and turned into a null somewhere in the middle.
+Typed exceptions are mapped in one place (`GlobalExceptionHandler`, an `IExceptionHandler`):
+on `/api` routes `NotFoundException` becomes a `404` and `ValidationException` a `400`, both as
+RFC 9457 ProblemDetails, and anything else a generic `500`. MVC pages get the `/Home/Error`
+view instead of a JSON body. Nothing is caught and turned into a null somewhere in the middle.
 
 Mapping is hand-written. AutoMapper was removed deliberately — the v15 upgrade was breaking,
 and the library moved to commercial licensing.
