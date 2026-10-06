@@ -50,11 +50,8 @@ namespace EmployeeManagementApp.Application.Services
 
         private static JobTitleDto ToDto(JobTitles jobTitle) => new JobTitleDto
         {
-            Id = jobTitle.Id
-            // JobTitleName intentionally NOT set. The original
-            // JobTitles->JobTitleDto map left it null because the member names
-            // differ (source "JobTitle" vs destination "JobTitleName"). Preserved
-            // to keep behaviour identical.
+            Id = jobTitle.Id,
+            JobTitleName = jobTitle.JobTitle
         };
 
         // Add a new employee with job title
