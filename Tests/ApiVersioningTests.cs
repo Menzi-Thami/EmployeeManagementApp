@@ -33,12 +33,12 @@ namespace EmployeeManagementApp.UnitTests
         }
 
         [Fact]
-        public async Task UnknownVersion_IsRejectedWithProblemDetails()
+        public async Task UnknownVersion_IsNotFound()
         {
             var response = await factory.CreateClient().GetAsync("/api/v2/JobTitle/7");
 
-            response.IsSuccessStatusCode.ShouldBeFalse();
-            response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
+            // With URL-segment versioning an unknown version is simply a path that doesn't exist.
+            response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
         }
 
         [Fact]

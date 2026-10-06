@@ -40,7 +40,7 @@ namespace EmployeeManagementApp.UnitTests
 
             limited.StatusCode.ShouldBe(HttpStatusCode.TooManyRequests);
             limited.Headers.RetryAfter.ShouldNotBeNull();
-            limited.Content.Headers.ContentType?.MediaType.ShouldBe("text/html");
+            limited.Content.Headers.ContentType.ShouldNotBeNull().MediaType.ShouldBe("text/html");
             (await limited.Content.ReadAsStringAsync()).ShouldContain("Too many requests");
             // The stricter policy is on the POST only; the form page itself still loads.
             (await client.GetAsync("/Home/AddEmployee")).StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -58,7 +58,7 @@ namespace EmployeeManagementApp.UnitTests
 
             limited.StatusCode.ShouldBe(HttpStatusCode.TooManyRequests);
             limited.Headers.RetryAfter.ShouldNotBeNull();
-            limited.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
+            limited.Content.Headers.ContentType.ShouldNotBeNull().MediaType.ShouldBe("application/problem+json");
             var body = await limited.Content.ReadAsStringAsync();
             body.ShouldContain("\"status\":429");
             body.ShouldContain("\"code\":\"rate_limited\"");
