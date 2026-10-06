@@ -20,6 +20,8 @@ namespace EmployeeManagementConsoleApp.Services
 
         // The feed returns a large polygon payload; give it longer than HttpClient's 100 s default, explicitly.
         public static readonly TimeSpan DownloadTimeout = TimeSpan.FromMinutes(3);
+        // Per attempt, until the response headers arrive; retries fit inside DownloadTimeout.
+        public static readonly TimeSpan AttemptTimeout = TimeSpan.FromMinutes(1);
         public const string UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3";
 
         public BulkInsertService(HttpClient httpClient, ILogger<BulkInsertService> logger, IConfiguration configuration)

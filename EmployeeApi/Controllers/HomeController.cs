@@ -4,6 +4,8 @@ using EmployeeManagementApp.Application.DTOs;
 using EmployeeManagementApp.Application.Services;
 using EmployeeManagementApp.Domain.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using EmployeeApi.RateLimiting;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
@@ -35,6 +37,7 @@ namespace EmployeeApi.Controllers
 
         // POST: /addemploy
         [HttpPost]
+        [EnableRateLimiting(RateLimitingExtensions.FormPostPolicy)]
         public async Task<IActionResult> AddEmployee(EmployeeDto employeeDto, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)

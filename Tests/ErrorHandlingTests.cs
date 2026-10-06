@@ -22,10 +22,10 @@ namespace EmployeeManagementApp.UnitTests
                 .ThrowsAsync(new NotFoundException("Job title 404 was not found."));
             var client = factory.CreateClient();
 
-            var response = await client.GetAsync("/api/JobTitle/404");
+            var response = await client.GetAsync("/api/v1/JobTitle/404");
 
             response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
-            response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
+            response.Content.Headers.ContentType.ShouldNotBeNull().MediaType.ShouldBe("application/problem+json");
             var body = await response.Content.ReadAsStringAsync();
             body.ShouldContain("\"status\":404");
             body.ShouldContain("\"traceId\"");
@@ -38,10 +38,10 @@ namespace EmployeeManagementApp.UnitTests
                 .ThrowsAsync(new ArgumentException("driver detail that must not leak"));
             var client = factory.CreateClient();
 
-            var response = await client.GetAsync("/api/JobTitle/500");
+            var response = await client.GetAsync("/api/v1/JobTitle/500");
 
             response.StatusCode.ShouldBe(HttpStatusCode.InternalServerError);
-            response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
+            response.Content.Headers.ContentType.ShouldNotBeNull().MediaType.ShouldBe("application/problem+json");
             (await response.Content.ReadAsStringAsync()).ShouldNotContain("driver detail");
         }
 
@@ -55,7 +55,7 @@ namespace EmployeeManagementApp.UnitTests
             var response = await client.GetAsync("/Home/ViewEmployees");
 
             response.StatusCode.ShouldBe(HttpStatusCode.InternalServerError);
-            response.Content.Headers.ContentType?.MediaType.ShouldBe("text/html");
+            response.Content.Headers.ContentType.ShouldNotBeNull().MediaType.ShouldBe("text/html");
             (await response.Content.ReadAsStringAsync()).ShouldContain("An error occurred while processing your request.");
         }
 
