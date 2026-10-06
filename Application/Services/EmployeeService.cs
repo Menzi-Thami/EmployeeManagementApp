@@ -61,11 +61,12 @@ namespace EmployeeManagementApp.Application.Services
         public async Task AddEmployeeAsync(EmployeeDto employeeDto, CancellationToken cancellationToken)
         {
             // Reject an unknown job title up front; inserting anyway hits FK_E_JTID and surfaces as a 500.
-            var jobTitle = await _jobTitleRepository.GetJobTitleByIdAsync(employeeDto.JobTitleId, cancellationToken)
-                ?? throw new ValidationException(
+            if (await _jobTitleRepository.GetJobTitleByIdAsync(employeeDto.JobTitleId, cancellationToken) is null)
+            {
+                throw new ValidationException(
                     nameof(EmployeeDto.JobTitleId),
                     $"Job title {employeeDto.JobTitleId} does not exist.");
-            employeeDto.JobTitleName = jobTitle.JobTitle;
+            }
 
             var employee = ToEntity(employeeDto);
             await _employeeRepository.AddEmployeeAsync(employee, cancellationToken);

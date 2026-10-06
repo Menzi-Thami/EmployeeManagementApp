@@ -53,6 +53,18 @@ namespace EmployeeManagementApp.UnitTests
         }
 
         [Fact]
+        public async Task AddEmployeeAsync_DoesNotModifyTheCallersDto()
+        {
+            _jobTitleRepository.GetJobTitleByIdAsync(1, _ct).Returns(new JobTitles { Id = 1, JobTitle = "Developer" });
+            var dto = new EmployeeDto { Name = "Ada", Surname = "Lovelace", JobTitleId = 1, JobTitleName = "As typed", DateOfBirth = new DateTime(1990, 5, 1) };
+            var sut = CreateSut();
+
+            await sut.AddEmployeeAsync(dto, _ct);
+
+            dto.JobTitleName.ShouldBe("As typed");
+        }
+
+        [Fact]
         public async Task GetEmployeeByIdAsync_WhenEmployeeDoesNotExist_ThrowsNotFoundException()
         {
             _employeeRepository.GetEmployeeByIdAsync(42, _ct).Returns((Employee?)null);
