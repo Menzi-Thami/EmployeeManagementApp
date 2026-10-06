@@ -5,6 +5,9 @@ using EmployeeManagementApp.Infrastructure.Data;
 using EmployeeManagementApp.Application.Services;
 using EmployeeManagementApp.Application.Common.Interfaces;
 using EmployeeApi.ErrorHandling;
+using EmployeeApi.Health;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Serilog.Events;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,6 +31,11 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 // Validated connection string (fails at boot if missing) + Microsoft.Data.SqlClient connection factory.
 builder.Services.AddDatabase();
 
+// /health/live has no checks (a DB blip must not get the process restarted);
+// /health/ready runs everything tagged "ready".
+builder.Services.AddHealthChecks()
+    .AddCheck<DatabaseHealthCheck>(DatabaseHealthCheck.Name, tags: ["ready"], timeout: TimeSpan.FromSeconds(5));
+
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 builder.Services.AddScoped<IProjectCostCalculator, ProjectCostCalculator>();
@@ -46,7 +54,14 @@ app.UseExceptionHandler("/Home/Error");
 
 // Structured HTTP request logging (method, path, status, elapsed) through the
 // already-configured Serilog pipeline.
-app.UseSerilogRequestLogging();
+// Probes hit /health every few seconds; keep them out of the Information-level request log.
+app.UseSerilogRequestLogging(options =>
+    options.GetLevel = (httpContext, _, exception) =>
+        exception is null && httpContext.Request.Path.StartsWithSegments("/health")
+            ? LogEventLevel.Verbose
+            : httpContext.Response.StatusCode >= 500 || exception is not null
+                ? LogEventLevel.Error
+                : LogEventLevel.Information);
 
 // Send Strict-Transport-Security outside development (dev stays on plain HTTP).
 if (!app.Environment.IsDevelopment())
@@ -61,6 +76,9 @@ app.UseAuthorization();
 
 // Map Razor Pages
 app.MapRazorPages();
+
+app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false }).AllowAnonymous();
+app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = c => c.Tags.Contains("ready") }).AllowAnonymous();
 
 // Set up custom routing for Add Employee and View Projects.
 //app.MapControllerRoute(
