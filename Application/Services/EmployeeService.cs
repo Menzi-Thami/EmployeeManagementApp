@@ -50,22 +50,20 @@ namespace EmployeeManagementApp.Application.Services
 
         private static JobTitleDto ToDto(JobTitles jobTitle) => new JobTitleDto
         {
-            Id = jobTitle.Id
-            // JobTitleName intentionally NOT set. The original
-            // JobTitles->JobTitleDto map left it null because the member names
-            // differ (source "JobTitle" vs destination "JobTitleName"). Preserved
-            // to keep behaviour identical.
+            Id = jobTitle.Id,
+            JobTitleName = jobTitle.JobTitle
         };
 
         // Add a new employee with job title
         public async Task AddEmployeeAsync(EmployeeDto employeeDto, CancellationToken cancellationToken)
         {
             // Reject an unknown job title up front; inserting anyway hits FK_E_JTID and surfaces as a 500.
-            var jobTitle = await _jobTitleRepository.GetJobTitleByIdAsync(employeeDto.JobTitleId, cancellationToken)
-                ?? throw new ValidationException(
+            if (await _jobTitleRepository.GetJobTitleByIdAsync(employeeDto.JobTitleId, cancellationToken) is null)
+            {
+                throw new ValidationException(
                     nameof(EmployeeDto.JobTitleId),
                     $"Job title {employeeDto.JobTitleId} does not exist.");
-            employeeDto.JobTitleName = jobTitle.JobTitle;
+            }
 
             var employee = ToEntity(employeeDto);
             await _employeeRepository.AddEmployeeAsync(employee, cancellationToken);

@@ -8,6 +8,9 @@ using EmployeeManagementApp.Application.Common.Interfaces;
 using EmployeeManagementApp.Application.DTOs;
 using EmployeeManagementApp.Application.Services;
 using EmployeeManagementApp.Domain.Models;
+using EmployeeManagementApp.Infrastructure.Repositories;
+using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
@@ -50,6 +53,18 @@ namespace EmployeeManagementApp.UnitTests
             await sut.AddEmployeeAsync(dto, _ct);
 
             await _employeeRepository.Received(1).AddEmployeeAsync(Arg.Is<Employee>(e => e.JobTitleId == 1 && e.Name == "Ada"), _ct);
+        }
+
+        [Fact]
+        public async Task AddEmployeeAsync_DoesNotModifyTheCallersDto()
+        {
+            _jobTitleRepository.GetJobTitleByIdAsync(1, _ct).Returns(new JobTitles { Id = 1, JobTitle = "Developer" });
+            var dto = new EmployeeDto { Name = "Ada", Surname = "Lovelace", JobTitleId = 1, JobTitleName = "As typed", DateOfBirth = new DateTime(1990, 5, 1) };
+            var sut = CreateSut();
+
+            await sut.AddEmployeeAsync(dto, _ct);
+
+            dto.JobTitleName.ShouldBe("As typed");
         }
 
         [Fact]
@@ -131,6 +146,26 @@ namespace EmployeeManagementApp.UnitTests
 
             result.Count.ShouldBe(2);
             result.Select(j => j.Id).ShouldBe(new[] { 1, 4 }, ignoreOrder: true);
+        }
+
+        [Fact]
+        public async Task GetAllJobTitlesAsync_MapsEachJobTitlesName_WhenServedFromTheCache()
+        {
+            var database = Substitute.For<IJobTitleRepository>();
+            database.GetAllJobTitlesAsync(Arg.Any<CancellationToken>()).Returns(
+            [
+                new JobTitles { Id = 1, JobTitle = "Developer" },
+                new JobTitles { Id = 4, JobTitle = "Business Analyst" }
+            ]);
+            var cache = new ServiceCollection().AddHybridCache().Services
+                .BuildServiceProvider().GetRequiredService<HybridCache>();
+            var sut = new EmployeeService(_employeeRepository, new CachedJobTitleRepository(database, cache), _logger);
+
+            await sut.GetAllJobTitlesAsync(_ct); // first call populates the cache
+            var result = (await sut.GetAllJobTitlesAsync(_ct)).ToList();
+
+            result.Select(j => (j.Id, j.JobTitleName)).ShouldBe(new[] { (1, "Developer"), (4, "Business Analyst") });
+            await database.Received(1).GetAllJobTitlesAsync(Arg.Any<CancellationToken>());
         }
     }
 }
