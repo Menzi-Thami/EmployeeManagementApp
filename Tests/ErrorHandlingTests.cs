@@ -22,7 +22,7 @@ namespace EmployeeManagementApp.UnitTests
                 .ThrowsAsync(new NotFoundException("Job title 404 was not found."));
             var client = factory.CreateClient();
 
-            var response = await client.GetAsync("/api/JobTitle/404");
+            var response = await client.GetAsync("/api/v1/JobTitle/404");
 
             response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
             response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
@@ -38,7 +38,7 @@ namespace EmployeeManagementApp.UnitTests
                 .ThrowsAsync(new ArgumentException("driver detail that must not leak"));
             var client = factory.CreateClient();
 
-            var response = await client.GetAsync("/api/JobTitle/500");
+            var response = await client.GetAsync("/api/v1/JobTitle/500");
 
             response.StatusCode.ShouldBe(HttpStatusCode.InternalServerError);
             response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");

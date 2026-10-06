@@ -49,7 +49,7 @@
                 var jobTitleId = $(this).val();
                 if (jobTitleId) {
                     $.ajax({
-                        url: '/api/JobTitle/' + jobTitleId,
+                        url: '/api/v1/JobTitle/' + encodeURIComponent(jobTitleId),
                         type: 'GET',
                         success: function (data) {
                             $('#JobTitleName').val(data.jobTitleName);

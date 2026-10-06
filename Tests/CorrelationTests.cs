@@ -80,7 +80,7 @@ namespace EmployeeManagementApp.UnitTests
             factory.JobTitleRepository.GetJobTitleByIdAsync(4040, Arg.Any<CancellationToken>())
                 .ThrowsAsync(new NotFoundException("Job title 4040 was not found."));
 
-            var response = await factory.CreateClient().GetAsync("/api/JobTitle/4040");
+            var response = await factory.CreateClient().GetAsync("/api/v1/JobTitle/4040");
 
             response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
             var traceId = response.Headers.GetValues(ObservabilityExtensions.TraceIdHeader).Single();

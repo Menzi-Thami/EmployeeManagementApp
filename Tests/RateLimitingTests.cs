@@ -52,9 +52,9 @@ namespace EmployeeManagementApp.UnitTests
             using var app = FreshApp();
             var client = app.CreateClient();
             await SendRepeatedlyAsync(RateLimitingExtensions.ApiPermitsPerMinute,
-                () => client.GetAsync("/api/JobTitle/1"));
+                () => client.GetAsync("/api/v1/JobTitle/1"));
 
-            var limited = await client.GetAsync("/api/JobTitle/1");
+            var limited = await client.GetAsync("/api/v1/JobTitle/1");
 
             limited.StatusCode.ShouldBe(HttpStatusCode.TooManyRequests);
             limited.Headers.RetryAfter.ShouldNotBeNull();

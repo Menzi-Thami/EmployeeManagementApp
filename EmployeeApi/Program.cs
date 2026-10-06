@@ -33,6 +33,16 @@ builder.Services.AddControllersWithViews(options =>
     options.Filters.Add(new Microsoft.AspNetCore.Mvc.AutoValidateAntiforgeryTokenAttribute()));
 builder.Services.AddRazorPages();
 
+// URL-segment versioning (api/v1/...) for the [ApiController] JSON API only; the MVC page
+// controllers are not API controllers, so their routes are untouched.
+builder.Services.AddApiVersioning(options =>
+    {
+        options.DefaultApiVersion = new Asp.Versioning.ApiVersion(1);
+        options.ReportApiVersions = true;
+        options.ApiVersionReader = new Asp.Versioning.UrlSegmentApiVersionReader();
+    })
+    .AddMvc();
+
 // One error shape: typed exceptions -> RFC 9457 ProblemDetails (with traceId) on /api routes.
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
