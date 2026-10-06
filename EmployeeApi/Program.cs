@@ -6,17 +6,25 @@ using EmployeeManagementApp.Application.Services;
 using EmployeeManagementApp.Application.Common.Interfaces;
 using EmployeeApi.ErrorHandling;
 using EmployeeApi.Health;
+using EmployeeApi.Observability;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Serilog.Events;
 
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add Serilog configuration
-builder.Host.UseSerilog((context, config) =>
-{
-    config.ReadFrom.Configuration(context.Configuration);
-});
+// Serilog stays the logging pipeline. Serilog 4 stamps every event with the current
+// Activity's TraceId/SpanId, and the output template prints {TraceId}, so each line
+// joins up with the request's spans. ReadFrom.Services picks up any ILogEventSink in DI.
+// preserveStaticLogger: each host logs through its own logger instead of the process-wide
+// static Log.Logger (nothing here uses it), so in-process test hosts don't swap sinks.
+builder.Host.UseSerilog((context, services, config) => config
+    .ReadFrom.Configuration(context.Configuration)
+    .ReadFrom.Services(services)
+    .Enrich.FromLogContext(),
+    preserveStaticLogger: true);
+
+builder.Services.AddObservability(builder.Configuration);
 
 // Add services to the container.
 // MVC (unlike Razor Pages) only validates antiforgery tokens when a filter asks it to.
@@ -48,6 +56,9 @@ builder.Services.AddScoped<IProjectService, ProjectService>();
 
 var app = builder.Build();
 
+// Outermost, so the header survives UseExceptionHandler clearing the response.
+app.UseTraceIdResponseHeader();
+
 // /api errors are written by GlobalExceptionHandler; anything it declines (MVC pages)
 // is re-executed as the /Home/Error view.
 app.UseExceptionHandler("/Home/Error");
@@ -56,12 +67,16 @@ app.UseExceptionHandler("/Home/Error");
 // already-configured Serilog pipeline.
 // Probes hit /health every few seconds; keep them out of the Information-level request log.
 app.UseSerilogRequestLogging(options =>
+{
+    // The host's logger, not the (preserved, silent) static Log.Logger.
+    options.Logger = app.Services.GetRequiredService<Serilog.ILogger>();
     options.GetLevel = (httpContext, _, exception) =>
         exception is null && httpContext.Request.Path.StartsWithSegments("/health")
             ? LogEventLevel.Verbose
             : httpContext.Response.StatusCode >= 500 || exception is not null
                 ? LogEventLevel.Error
-                : LogEventLevel.Information);
+                : LogEventLevel.Information;
+});
 
 // Send Strict-Transport-Security outside development (dev stays on plain HTTP).
 if (!app.Environment.IsDevelopment())
