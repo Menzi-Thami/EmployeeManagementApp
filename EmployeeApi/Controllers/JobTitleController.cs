@@ -1,11 +1,14 @@
 ﻿using EmployeeManagementApp.Application.Common.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using EmployeeApi.RateLimiting;
 using System.Threading.Tasks;
 
 namespace EmployeeApi.Controllers
 {
     [ApiController] 
     [Route("api/[controller]")]
+    [EnableRateLimiting(RateLimitingExtensions.ApiPolicy)]
     public class JobTitleController : ControllerBase 
     {
         private readonly IJobTitleRepository _jobTitleRepository;

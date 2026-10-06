@@ -7,6 +7,7 @@ using EmployeeManagementApp.Application.Common.Interfaces;
 using EmployeeApi.ErrorHandling;
 using EmployeeApi.Health;
 using EmployeeApi.Observability;
+using EmployeeApi.RateLimiting;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Serilog.Events;
 
@@ -38,6 +39,8 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 // Validated connection string (fails at boot if missing) + Microsoft.Data.SqlClient connection factory.
 builder.Services.AddDatabase();
+
+builder.Services.AddClientRateLimiting();
 
 // /health/live has no checks (a DB blip must not get the process restarted);
 // /health/ready runs everything tagged "ready".
@@ -88,12 +91,19 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthorization();
+// After routing, so [EnableRateLimiting]/DisableRateLimiting endpoint metadata is visible;
+// static files were already served above and never count.
+app.UseRateLimiter();
 
 // Map Razor Pages
 app.MapRazorPages();
 
-app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false }).AllowAnonymous();
-app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = c => c.Tags.Contains("ready") }).AllowAnonymous();
+app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false })
+    .AllowAnonymous()
+    .DisableRateLimiting();
+app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = c => c.Tags.Contains("ready") })
+    .AllowAnonymous()
+    .DisableRateLimiting();
 
 // Set up custom routing for Add Employee and View Projects.
 //app.MapControllerRoute(
