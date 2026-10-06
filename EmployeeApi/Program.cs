@@ -60,7 +60,8 @@ builder.Services.AddHealthChecks()
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 builder.Services.AddScoped<IProjectCostCalculator, ProjectCostCalculator>();
-builder.Services.AddScoped<IJobTitleRepository, JobTitleRepository>();
+// Job titles are read-heavy reference data: HybridCache cache-aside in front of the repository.
+builder.Services.AddCachedJobTitles();
 
 
 // Register services
